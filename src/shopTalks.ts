@@ -459,6 +459,7 @@ export const itemTalks: Record<string, ShopLine[][]> = {
     [
       sans("laugh", "3分待つのが面倒なら、2分で食えばいいんだぜ"),
       gaster("awkward", "……それはまだ固いのではないかね。"),
+      sans("laugh", "ヘヘ、オイラは固いのが好きなんだ。　ホネみたいにな"),
     ],
     [
       gaster("normal", "ふむ。研究が忙しい夜には、これが一番なのだよ。"),
