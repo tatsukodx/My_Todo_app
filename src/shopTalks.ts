@@ -275,6 +275,32 @@ export const itemTalks: Record<string, ShopLine[][]> = {
       gaster("awkward", "……手が震えるのだよ。"),
     ],
   ],
+  butterscotchPie: [
+    [
+      gaster("laugh", "トリエル王妃からの差し入れだよ。お城で焼いたそうだ。"),
+      sans("laugh", "バタースコッチとシナモンのいい匂いだぜ"),
+      gaster("normal", "ふむ。研究所の皆に、と言付かっているのだよ。"),
+    ],
+    [
+      sans("normal", "王妃さまのパイだ。アズゴア王も毎日食べてるらしいぜ"),
+      gaster("laugh", "ふむ。お二人は今日も仲睦まじいようだね。"),
+      sans("mock", "王さま、また紅茶の葉っぱの話でノロけてたらしいぜ", true),
+    ],
+    [
+      gaster(
+        "normal",
+        "これは私も楽しみにしているのだよ。売り物にするのは心苦しいがね。",
+      ),
+      sans("mock", "じゃあ、なんで売ってるんだ？", true),
+      gaster("awkward", "……研究費が足りないのだよ。"),
+    ],
+    [
+      sans("laugh", "ひと口で、自尊心が全部戻ってくる味だ"),
+      gaster("normal", "王妃の料理の腕は、王国でいちばんだからね。"),
+      sans("normal", "パピルスにも作り方を教えてもらえないかな"),
+      gaster("awkward", "……ふむ。まずは焦がさないところからだね。"),
+    ],
+  ],
   dinner: [
     [
       sans("normal", "がんばったごほうびだ。これを食えば全回復だぜ"),
@@ -353,6 +379,19 @@ export const itemTalks: Record<string, ShopLine[][]> = {
       sans("normal", "ホットドッグだ。ケチャップは好きなだけかけていいぜ"),
       gaster("awkward", "君がかけると、パンが見えなくなるのだよ。"),
     ],
+    [
+      sans("normal", "ホットドッグはオイラの店の看板商品だ"),
+      sans("mock", "……まあ、ここは研究所の売店なんだけどな", true),
+      gaster("awkward", "いつから君の店になったのかね。"),
+    ],
+    [
+      gaster(
+        "normal",
+        "ふむ。サンズ君、ホットドッグを頭に乗せて遊ぶのは禁止だよ。",
+      ),
+      sans("laugh", "ヘヘ、バランス感覚のトレーニングだぜ"),
+      gaster("angry", "商品で遊ぶのはやめたまえ！"),
+    ],
   ],
   spaghetti: [
     [
@@ -365,6 +404,15 @@ export const itemTalks: Record<string, ShopLine[][]> = {
     [
       gaster("normal", "パピルス君のスパゲッティだね。毎回、味が違うのだよ。"),
       sans("mock", "当たればごちそう、外れれば……まあ、気持ちは伝わるさ", true),
+    ],
+    [
+      sans("normal", "パピルスが朝から張り切って作ってたんだ"),
+      gaster("normal", "ふむ。キッチンが少し焦げ臭かったのは、そのせいかね。"),
+      sans("awkward", "……気にすんな"),
+    ],
+    [
+      gaster("laugh", "このソースの配合は、研究する価値があるね。"),
+      sans("mock", "毎回味が違うから、データは取れないぜ", true),
     ],
   ],
   strongCoffee: [
@@ -386,6 +434,18 @@ export const itemTalks: Record<string, ShopLine[][]> = {
         "ふむ。ごくまれに、すばらしいことが起きる……という噂だよ。",
       ),
     ],
+    [
+      sans("awkward", "ハカセ、それ飲んで三日寝てないって本当か？"),
+      gaster("laugh", "四日だよ、サンズ君。"),
+      sans("angry", "自慢するところじゃないだろ"),
+    ],
+    [
+      gaster(
+        "normal",
+        "飲んだ者には、世界が少しだけ違って見える。科学の神秘だよ。",
+      ),
+      sans("mock", "ただのカフェインの取りすぎだろ", true),
+    ],
   ],
   cupNoodle: [
     [
@@ -395,6 +455,14 @@ export const itemTalks: Record<string, ShopLine[][]> = {
     [
       gaster("awkward", "……サンズ君、私のカップめんを売り物にしていないかね？"),
       sans("mock", "名前、書いてなかったからな", true),
+    ],
+    [
+      sans("laugh", "3分待つのが面倒なら、2分で食えばいいんだぜ"),
+      gaster("awkward", "……それはまだ固いのではないかね。"),
+    ],
+    [
+      gaster("normal", "ふむ。研究が忙しい夜には、これが一番なのだよ。"),
+      sans("normal", "ハカセの夜食、ほぼ毎日これだよな"),
     ],
   ],
   donut: [
@@ -406,6 +474,18 @@ export const itemTalks: Record<string, ShopLine[][]> = {
       sans("laugh", "甘いもんは自尊心にきくんだ"),
       gaster("normal", "ふむ。糖分は脳の燃料でもあるのだよ。"),
     ],
+    [
+      gaster(
+        "normal",
+        "真ん中の穴には、熱を均一に通すための工夫があるのだよ。",
+      ),
+      sans("laugh", "へえ。オイラの目の穴にも理由があるのかな"),
+      gaster("awkward", "……それは研究したことがないね。"),
+    ],
+    [
+      sans("mock", "ハカセが半分かじったやつは、半額だぜ", true),
+      gaster("angry", "かじっていないよ！"),
+    ],
   ],
   boneCookie: [
     [
@@ -415,6 +495,15 @@ export const itemTalks: Record<string, ShopLine[][]> = {
     [
       gaster("normal", "パピルス君が型を選んだそうだよ。"),
       sans("normal", "あいつ、ホネの形がかっこいいって言ってたな"),
+    ],
+    [
+      gaster("laugh", "カルシウムたっぷりだよ。骨が丈夫になるのだ。"),
+      sans("laugh", "ヘヘ、オイラはもう十分丈夫だぜ"),
+    ],
+    [
+      sans("normal", "パピルスが一枚つまみ食いしてたな"),
+      gaster("normal", "ふむ。味見も立派な研究だよ。"),
+      sans("mock", "ハカセ、パピルスには甘いよな", true),
     ],
   ],
   iceCream: [
@@ -441,6 +530,15 @@ export const itemTalks: Record<string, ShopLine[][]> = {
       gaster("normal", "ふむ。普通のケチャップの四倍の量だよ。"),
       sans("mock", "つまり、四倍しあわせってことだな", true),
     ],
+    [
+      gaster("awkward", "サンズ君、なぜ業務用を仕入れたのかね。"),
+      sans("laugh", "需要があるからさ。主にオイラの"),
+    ],
+    [
+      sans("normal", "ボトルが重くて、持つのも一苦労だ"),
+      sans("mock", "……まあ、オイラは筋肉がないからな", true),
+      gaster("awkward", "骨しかないのだから当然だよ。"),
+    ],
   ],
   pillow: [
     [
@@ -454,6 +552,15 @@ export const itemTalks: Record<string, ShopLine[][]> = {
         "ふむ。睡眠は大切だよ。……私も最後に寝たのはいつだったかね。",
       ),
     ],
+    [
+      gaster("normal", "このまくら、いつも君の机の上にあるね。"),
+      sans("laugh", "仕事中も肌身離さず持ってるからな"),
+      gaster("angry", "仕事中に使うのが問題なのだよ！"),
+    ],
+    [
+      sans("normal", "ふかふかだぜ。これなら五分で寝られる"),
+      gaster("mock", "ふむ。君なら三秒だろうね。"),
+    ],
   ],
   alarm: [
     [
@@ -464,6 +571,14 @@ export const itemTalks: Record<string, ShopLine[][]> = {
       sans("normal", "ちょっとの間だけ、やる気が出る時計だ"),
       gaster("laugh", "鳴っている間だけね。"),
     ],
+    [
+      gaster("laugh", "私の発明品だよ。止めるまで鳴り続けるのだ。"),
+      sans("awkward", "……オイラが毎朝、窓から投げてるやつだ"),
+    ],
+    [
+      sans("normal", "朝が苦手なら、これ一つで大丈夫だ"),
+      sans("mock", "オイラは三つあっても起きないけどな", true),
+    ],
   ],
   energyDrink: [
     [
@@ -473,6 +588,17 @@ export const itemTalks: Record<string, ShopLine[][]> = {
     [
       sans("awkward", "徹夜ドリンクだ。……飲みすぎるとハカセみたいになるぜ"),
       gaster("angry", "どういう意味かね、サンズ君！"),
+    ],
+    [
+      gaster("normal", "成分の大半はカフェインだよ。私の血液と同じさ。"),
+      sans("awkward", "……ハカセ、それ笑えないぜ"),
+    ],
+    [
+      sans("laugh", "これを飲むと、ハカセみたいに目がギンギンになるぜ"),
+      gaster(
+        "normal",
+        "ふむ。ほどほどにしておきたまえ。私のようにならないようにね。",
+      ),
     ],
   ],
   oldCoin: [
@@ -487,6 +613,16 @@ export const itemTalks: Record<string, ShopLine[][]> = {
       sans("laugh", "持ってるとGOLDが寄ってくるらしいぜ"),
       gaster("mock", "ふむ。科学的な根拠はないがね。"),
     ],
+    [
+      sans("normal", "裏に変な記号が彫ってあるんだよな"),
+      gaster("mock", "ふむ……それは私にも読めない文字だね。"),
+      sans("awkward", "ハカセが読めないって、相当だぜ"),
+    ],
+    [
+      gaster("laugh", "持ち主に富をもたらすと言われているのだよ。"),
+      sans("mock", "じゃあ、なんでハカセはいつも金欠なんだ？", true),
+      gaster("awkward", "……ふむ。"),
+    ],
   ],
   stickyNotes: [
     [
@@ -496,6 +632,14 @@ export const itemTalks: Record<string, ShopLine[][]> = {
     [
       gaster("normal", "やることを書き出すだけで、心の負担は軽くなるのだよ。"),
       sans("mock", "ハカセの心はもう付箋で埋まってそうだけどな", true),
+    ],
+    [
+      sans("laugh", "オイラも使ってるぜ。「ヒルネ」って書いて貼ってある"),
+      gaster("angry", "それはタスクではないのだよ！"),
+    ],
+    [
+      gaster("normal", "色ごとに優先度を分けると、効率が上がるのだよ。"),
+      sans("normal", "黄色しか持ってないけどな"),
     ],
   ],
   researchNote: [
@@ -509,6 +653,14 @@ export const itemTalks: Record<string, ShopLine[][]> = {
         "mock",
         "ふむ。それは暗号なのだよ。……私にも読めないことがあるがね。",
       ),
+    ],
+    [
+      sans("awkward", "ハカセ、大事なノートを売っていいのか？"),
+      gaster("laugh", "ふむ。写しはまだ十冊あるのだよ。"),
+    ],
+    [
+      gaster("normal", "ページの端に、サンズ君の落書きがあるがね。"),
+      sans("mock", "サービスだ。価値が上がるぜ", true),
     ],
   ],
   sansJoke: [

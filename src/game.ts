@@ -206,6 +206,13 @@ export const items: Item[] = [
     effects: [{ type: "heal", amount: "full" }],
   },
   {
+    id: "butterscotchPie",
+    name: "バタースコッチシナモンパイ",
+    price: 70,
+    description: "HPをぜんかいふく (トリエル王妃からの差し入れ)",
+    effects: [{ type: "heal", amount: "full" }],
+  },
+  {
     id: "hotdog",
     name: "ホットドッグ",
     price: 15,
