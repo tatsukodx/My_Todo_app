@@ -1,0 +1,314 @@
+@import "tailwindcss";
+
+/* サンズのセリフ用フォント
+   英数字は Comic Neue、日本語は HGS創英角ﾎﾟｯﾌﾟ体 (Office 付属で配布できないため、
+   閲覧者の PC に入っていれば使う)。入っていなければ Yusei Magic で代用する */
+@theme {
+  --font-sans-voice:
+    "Comic Neue", "HGS創英角ﾎﾟｯﾌﾟ体", "HGP創英角ﾎﾟｯﾌﾟ体", "Yusei Magic",
+    "Comic Sans MS", cursive;
+  --font-pixel: "DotGothic16", sans-serif;
+  /* ガスターの Wingdings 風の記号用。白黒の記号を持つフォントを優先する */
+  --font-wingdings:
+    "Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols",
+    "Apple Symbols", sans-serif;
+  --color-ut-orange: #ff9b26;
+  --color-ut-yellow: #ffff00;
+  --color-ut-red: #ff0000;
+}
+
+/* 黒背景・白文字・ドット文字を画面全体の基本にする */
+@layer base {
+  html {
+    color-scheme: dark; /* 日時入力のカレンダーなども暗い配色にする */
+  }
+  body {
+    background-color: black;
+    color: white;
+    font-family: var(--font-pixel);
+  }
+}
+
+/* 白い太枠の黒い箱 (会話ウィンドウやタスクの枠) */
+@utility ut-box {
+  border: 4px solid white;
+  background-color: black;
+}
+
+/* 戦闘画面のコマンドのような、オレンジ枠で選ぶと黄色になるボタン */
+@utility ut-button {
+  cursor: pointer;
+  border: 3px solid var(--color-ut-orange);
+  color: var(--color-ut-orange);
+  padding: 0.25rem 0.75rem;
+  &:hover {
+    border-color: var(--color-ut-yellow);
+    color: var(--color-ut-yellow);
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+    border-color: var(--color-ut-orange);
+    color: var(--color-ut-orange);
+  }
+}
+
+/* 横スワイプの欄でスクロールバーを隠す */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 黒地に白枠の入力欄。選択中は黄色の枠 */
+@utility ut-input {
+  border: 2px solid white;
+  background-color: black;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  &:focus {
+    outline: 2px solid var(--color-ut-yellow);
+    outline-offset: 0;
+  }
+}
+
+/* カレンダーで月を切り替えたときに、下 (次の月) か上 (前の月) から滑り込ませる */
+@theme {
+  --animate-slide-from-below: slide-from-below 0.25s ease-out;
+  --animate-slide-from-above: slide-from-above 0.25s ease-out;
+  @keyframes slide-from-below {
+    from {
+      transform: translateY(30%);
+      opacity: 0;
+    }
+  }
+  @keyframes slide-from-above {
+    from {
+      transform: translateY(-30%);
+      opacity: 0;
+    }
+  }
+}
+
+/* 画面のあちこちを少しだけ動かすアニメーション
+   (transform ではなく rotate / scale / translate を使い、
+   Tailwind の位置合わせ用の translate などとぶつからないようにする) */
+@theme {
+  /* 黄色い枠の中の文字を、ゆらゆら小さく揺らす */
+  --animate-wobble: wobble 2.4s ease-in-out infinite;
+  /* ハートを心臓のように脈打たせる */
+  --animate-heartbeat: heartbeat 1.4s ease-in-out infinite;
+  /* 「▼ つぎへ」などの矢印を、指す向きに小さく弾ませる */
+  --animate-nudge-down: nudge-down 1s ease-in-out infinite;
+  --animate-nudge-up: nudge-up 1s ease-in-out infinite;
+  /* 話しているキャラを、カクカクと上下させる */
+  --animate-talk: talk 0.24s steps(1, end) infinite;
+  /* 期限切れの文字を、ぷるぷる震わせる */
+  --animate-shake: shake 0.32s steps(1, end) infinite;
+
+  @keyframes wobble {
+    0%,
+    100% {
+      rotate: -6deg;
+      scale: 1;
+    }
+    50% {
+      rotate: 6deg;
+      scale: 1.1;
+    }
+  }
+  @keyframes heartbeat {
+    0%,
+    30%,
+    60%,
+    100% {
+      scale: 1;
+    }
+    15% {
+      scale: 1.25;
+    }
+    45% {
+      scale: 1.12;
+    }
+  }
+  @keyframes nudge-down {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 3px;
+    }
+  }
+  @keyframes nudge-up {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -3px;
+    }
+  }
+  @keyframes talk {
+    0% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -2px;
+    }
+  }
+  @keyframes shake {
+    0% {
+      translate: 0 0;
+    }
+    25% {
+      translate: 1px 0;
+    }
+    50% {
+      translate: 0 1px;
+    }
+    75% {
+      translate: -1px 0;
+    }
+  }
+}
+
+/* さらに追加した動き */
+@theme {
+  /* 「＊」を、セーブポイントの星のようにキラッと光らせる */
+  --animate-twinkle: twinkle 2s ease-in-out infinite;
+  /* タイトルの文字を 1 文字ずつ波打たせる (文字ごとに開始を遅らせて使う) */
+  --animate-wave: wave 2.8s ease-in-out infinite;
+  /* 追加ボタンを、ふわふわ浮かせる */
+  --animate-float: float 2.4s ease-in-out infinite;
+  /* ハートなどを、ポンと弾けるように出す (1 回だけ) */
+  --animate-pop: pop 0.35s ease-out;
+  /* タスクなどを、左からスッと出す (1 回だけ) */
+  --animate-enter: enter 0.3s ease-out both;
+  /* 表示を切り替えたときに、ふわっと出す (1 回だけ) */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  /* 追加フォームを、カクッと拡大しながら出す (1 回だけ) */
+  --animate-pop-in: pop-in 0.25s steps(4, end);
+  /* ガスターの記号を、ちらちら明滅させる */
+  --animate-flicker: flicker 0.6s steps(1, end) infinite;
+
+  @keyframes twinkle {
+    0%,
+    70%,
+    100% {
+      scale: 1;
+      opacity: 1;
+    }
+    80% {
+      scale: 1.4;
+      opacity: 0.6;
+    }
+    90% {
+      scale: 0.9;
+      opacity: 1;
+    }
+  }
+  @keyframes wave {
+    0%,
+    30%,
+    100% {
+      translate: 0 0;
+    }
+    15% {
+      translate: 0 -4px;
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -6px;
+    }
+  }
+  @keyframes pop {
+    0% {
+      scale: 0.3;
+    }
+    60% {
+      scale: 1.4;
+    }
+    100% {
+      scale: 1;
+    }
+  }
+  @keyframes enter {
+    from {
+      translate: -16px 0;
+      opacity: 0;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      scale: 0.85;
+      opacity: 0;
+    }
+  }
+  @keyframes flicker {
+    0% {
+      opacity: 1;
+    }
+    40% {
+      opacity: 0.55;
+    }
+    60% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 0.8;
+    }
+  }
+}
+
+/* ショップのアイテムの説明を、下からにょきっと出す (少し行き過ぎて戻る) */
+@theme {
+  --animate-pop-up: pop-up 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  @keyframes pop-up {
+    from {
+      translate: 0 120%;
+    }
+  }
+}
+
+/* 豆を挽きすぎたコーヒーの効果 */
+@theme {
+  /* ページの中身を、酔っぱらったようにゆらゆら揺らす */
+  --animate-screen-wobble: screen-wobble 3s ease-in-out infinite;
+  /* 重ねた虹色を、横に流し続ける */
+  --animate-rainbow: rainbow 4s linear infinite;
+  @keyframes screen-wobble {
+    0%,
+    100% {
+      rotate: 0deg;
+      translate: 0 0;
+    }
+    25% {
+      rotate: 1.5deg;
+      translate: 6px -3px;
+    }
+    75% {
+      rotate: -1.5deg;
+      translate: -6px 3px;
+    }
+  }
+  @keyframes rainbow {
+    from {
+      background-position: 0% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+}
