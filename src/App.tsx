@@ -65,7 +65,6 @@ const playerStorageKey = "MyTodoAppPlayer"; // プレイヤー (HP・LV・GOLD �
 const logStorageKey = "MyTodoAppLog"; // 作業報告書の記録の保存先
 const damageCheckInterval = 30_000; // 期限切れを調べる間隔 (ミリ秒)
 const toastDuration = 2500; // 報酬やダメージの表示を出しておく時間
-const repeatListDays = 7; // 今日から何日分の繰り返しタスクをやること一覧に出すか
 const title = "ガスター研究室のスケジュール表";
 
 type StoredTodo = {
@@ -118,16 +117,12 @@ const loadLog = (): LogEntry[] => {
   return jsonStr === null ? [] : JSON.parse(jsonStr);
 };
 
-// 今日から repeatListDays 日分の、繰り返しタスクの回
-const getWeekRepeatTodos = (repeats: RepeatRule[]): Todo[] => {
+// 今日 1 日分の、繰り返しタスクの回
+const getTodayRepeatTodos = (repeats: RepeatRule[]): Todo[] => {
   const today = dayjs().startOf("day");
   return sortByDeadline(
     repeats.flatMap((rule) =>
-      getOccurrences(
-        rule,
-        today.toDate(),
-        today.add(repeatListDays, "day").toDate(),
-      ),
+      getOccurrences(rule, today.toDate(), today.add(1, "day").toDate()),
     ),
   );
 };
@@ -174,16 +169,16 @@ const App = () => {
   // 報酬やダメージを画面下に少しだけ表示する
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
 
-  // 繰り返しタスクは、今日から 1 週間以内の回だけをやること一覧に出す
+  // 繰り返しタスクは、今日の回だけをやること一覧に出す
   const today = dayjs().startOf("day");
-  const weekRepeatTodos = getWeekRepeatTodos(repeats);
+  const todayRepeatTodos = getTodayRepeatTodos(repeats);
   // タイムテーブルとカレンダーには、表示している月の回をすべて出す
   const month = dayjs(selectedDate).startOf("month");
   const monthRepeatTodos = repeats.flatMap((rule) =>
     getOccurrences(rule, month.toDate(), month.add(1, "month").toDate()),
   );
   // 会話の件数や場面は、やること一覧に出ているタスクで数える
-  const listedTodos = [...todos, ...weekRepeatTodos];
+  const listedTodos = [...todos, ...todayRepeatTodos];
   const uncompletedCount = listedTodos.filter((todo) => !todo.isDone).length;
   const currentScene = eventScene ?? getStatusScene(listedTodos);
   // 期限のないタスクは「とりあえず後でやる」欄に表示する
@@ -235,7 +230,7 @@ const App = () => {
       const checkedAt = Date.now();
       const overdue = getNewlyOverdue(
         player,
-        [...todos, ...getWeekRepeatTodos(repeats)],
+        [...todos, ...getTodayRepeatTodos(repeats)],
         checkedAt,
       );
       if (overdue.length === 0) {
@@ -593,18 +588,17 @@ const App = () => {
 
       <BottomSheet title="やること一覧">
         <h2 className="mb-2 text-lg">
-          <Star /> 今週の繰り返しタスク
+          <Star /> 今日の繰り返しタスク
           <span className="ml-2 text-sm text-gray-400">
-            ({today.format("M/D")} 〜{" "}
-            {today.add(repeatListDays - 1, "day").format("M/D")})
+            ({today.format("M/D")})
           </span>
         </h2>
         <TodoList
-          todos={weekRepeatTodos}
+          todos={todayRepeatTodos}
           updateIsDone={updateIsDone}
           updateDeadline={updateTodoDeadline}
           remove={remove}
-          emptyMessage="今週の繰り返しタスクはありません。"
+          emptyMessage="今日の繰り返しタスクはありません。"
         />
         {repeats.length > 0 && (
           <div className="mt-3 space-y-1 border-2 border-gray-700 p-2 text-sm">
@@ -828,7 +822,7 @@ const App = () => {
                     .join("、")}{" "}
                   …… とスケジュールに入ります。
                   <br />
-                  今日から1週間以内の回は「今週の繰り返しタスク」に入ります
+                  今日の回は「今日の繰り返しタスク」に入ります
                 </div>
               )}
             </div>
