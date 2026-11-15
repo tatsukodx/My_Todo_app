@@ -51,6 +51,10 @@ const TodoItem = (props: Props) => {
           ? "text-ut-yellow"
           : "text-ut-green";
 
+  // 「日時を決める」ボタンを出すか (期限のない、まだ終わっていないタスク)
+  const canScheduleLater =
+    todo.deadline === null && !todo.isDone && !isEditingDeadline;
+
   const saveDeadline = () => {
     if (deadlineInput === null) {
       return;
@@ -65,7 +69,15 @@ const TodoItem = (props: Props) => {
     <div className="ut-box px-4 py-2 motion-safe:animate-enter">
       {/* 日時を決める欄を開け閉めしたときに、枠を滑らかに伸び縮みさせる */}
       <SmoothHeight>
-        <div className="flex items-center justify-between gap-3">
+        {/* ボタンが 2 つ並ぶとき (「日時を決める」があるとき) は、スマホの幅だと名前が押し縮められるので、
+            名前の下にボタンを出す (広い画面では今までどおり右に並べる) */}
+        <div
+          className={twMerge(
+            "flex items-center justify-between gap-3",
+            canScheduleLater &&
+              "flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3",
+          )}
+        >
           <div
             className={twMerge(
               "flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1",
@@ -139,7 +151,7 @@ const TodoItem = (props: Props) => {
             )}
           </div>
           <div className="flex shrink-0 gap-2">
-            {todo.deadline === null && !todo.isDone && !isEditingDeadline && (
+            {canScheduleLater && (
               <CommandButton
                 icon={calendarIcon}
                 size="sm"
