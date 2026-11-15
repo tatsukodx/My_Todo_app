@@ -82,8 +82,16 @@ export const setSoundEnabled = (value: boolean) => {
   }
 };
 
+// マウスを乗せられない端末 (スマホやタブレット) か
+// (指で操作するときは、スクロールやタップのたびに鳴ってうるさいので、選択が動く音は鳴らさない)
+const isTouchDevice = (): boolean =>
+  window.matchMedia("(hover: none)").matches;
+
 export const playSound = (name: SoundName) => {
   if (!enabled) {
+    return;
+  }
+  if (name === "move" && isTouchDevice()) {
     return;
   }
   // ボタンの音と重なったときは、あとから鳴らした音 (回復など) を聞かせる
