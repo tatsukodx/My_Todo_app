@@ -7,6 +7,7 @@ import CharacterPortrait from "./CharacterPortrait";
 import { twMerge } from "tailwind-merge";
 import type { GasterWord } from "./wingdings";
 import { getGasterWords, getWordSteps, toWingdings } from "./wingdings";
+import { playSansVoiceFor, startGasterVoice } from "./sound";
 
 type Props = {
   patterns: DialogueLine[][];
@@ -94,6 +95,7 @@ const DialogueBox = (props: Props) => {
       ? chars.length
       : gasterWords.reduce((sum, word) => sum + getWordSteps(word), 0);
   const isTyping = charCount < totalSteps;
+  const isGasterTalking = isOpen && isTyping && line.speaker === "gaster";
 
   const goNext = () => {
     if (isLast) {
@@ -118,12 +120,26 @@ const DialogueBox = (props: Props) => {
     }
     const timer = isTyping
       ? window.setTimeout(
-          () => setCharCount((n) => n + 1),
+          () => {
+            // サンズは 1 文字出るたびに声を鳴らす
+            if (line.speaker === "sans") {
+              playSansVoiceFor(chars[charCount]);
+            }
+            setCharCount((n) => n + 1);
+          },
           gasterWords === null ? typingInterval : wingdingsInterval,
         )
       : window.setTimeout(goNext, isLast ? closeDelay : nextLineDelay);
     return () => window.clearTimeout(timer);
   });
+
+  // ガスターの声は、セリフを表示している間ずっとくり返し鳴らし、表示し終えたら止める
+  useEffect(() => {
+    if (!isGasterTalking) {
+      return;
+    }
+    return startGasterVoice();
+  }, [isGasterTalking]);
 
   // クリックしたら、表示途中なら全文を出し、表示し終えていれば次へ進む
   const handleClick = () => {
@@ -144,6 +160,7 @@ const DialogueBox = (props: Props) => {
       <button
         type="button"
         onClick={handleClick}
+        data-silent
         className="flex w-full cursor-pointer items-start gap-2 border-4 border-white bg-black/70 p-2 text-left sm:gap-3 sm:p-3"
       >
         {/* 左にサンズ、右にガスター。話していない方は暗くする */}

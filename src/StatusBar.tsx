@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { twMerge } from "tailwind-merge";
+import { isSoundEnabled, setSoundEnabled } from "./sound";
 import type { BuffType, Player } from "./game";
 import { getMaxHp, getNextExp, isBuffActive } from "./game";
 import CommandButton from "./CommandButton";
@@ -22,6 +24,7 @@ const StatusBar = (props: Props) => {
   const player = props.player;
   const maxHp = getMaxHp(player.lv);
   const nextExp = getNextExp(player.lv);
+  const [isSoundOn, setIsSoundOn] = useState(isSoundEnabled);
   const activeBuffs = (Object.keys(buffLabels) as BuffType[]).filter((type) =>
     isBuffActive(player, type, props.now),
   );
@@ -59,11 +62,25 @@ const StatusBar = (props: Props) => {
           </span>
         </div>
         <span className="text-ut-yellow">{player.gold} G</span>
+        <button
+          type="button"
+          onClick={() => {
+            setSoundEnabled(!isSoundOn);
+            setIsSoundOn(!isSoundOn);
+          }}
+          aria-pressed={isSoundOn}
+          aria-label="音を鳴らす"
+          className={twMerge(
+            "ml-auto cursor-pointer text-sm hover:text-ut-yellow",
+            !isSoundOn && "text-gray-500",
+          )}
+        >
+          ♪ {isSoundOn ? "ON" : "OFF"}
+        </button>
         <CommandButton
           icon={shopIcon}
           size="sm"
           onClick={props.onOpenShop}
-          className="ml-auto"
         >
           ショップ
         </CommandButton>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
+import { playSound } from "./sound";
 
 export type SelectorItem = {
   value: number;
@@ -60,7 +61,12 @@ const SwipeSelector = (props: Props) => {
 
   // スクロール中は枠の中の項目を光らせ、止まったらその項目を選ぶ
   const handleScroll = () => {
-    setScrollingValue(findCenterValue());
+    const centerValue = findCenterValue();
+    // 枠の中の項目が変わるたびに、選択が動く音を鳴らす
+    if (centerValue !== (scrollingValue ?? props.value)) {
+      playSound("move");
+    }
+    setScrollingValue(centerValue);
     window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
       const centerValue = findCenterValue();

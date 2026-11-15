@@ -5,6 +5,8 @@ import { getMaxHp, isScreenEffectActive, items } from "./game";
 import type { ShopLine, ShopTalkKey } from "./shopTalks";
 import { itemTalks, jokeTalks, shopTalks } from "./shopTalks";
 import ShopScene from "./ShopScene";
+import type { SoundName } from "./sound";
+import { playSound } from "./sound";
 import CommandButton from "./CommandButton";
 import { checkIcon, heartIcon, shopIcon } from "./pixelIcons";
 
@@ -38,6 +40,7 @@ const Shop = (props: Props) => {
   const [talk, setTalk] = useState(() => ({
     lines: pickRandom(shopTalks.enter),
     itemName: "",
+    endSound: undefined as SoundName | undefined,
     count: 0,
   }));
 
@@ -54,8 +57,13 @@ const Shop = (props: Props) => {
     (currentPage + 1) * itemsPerPage,
   );
 
-  const say = (lines: ShopLine[], itemName = "") => {
-    setTalk((current) => ({ lines, itemName, count: current.count + 1 }));
+  const say = (lines: ShopLine[], itemName = "", endSound?: SoundName) => {
+    setTalk((current) => ({
+      lines,
+      itemName,
+      endSound,
+      count: current.count + 1,
+    }));
   };
   const sayRandom = (key: ShopTalkKey, itemName = "") =>
     say(pickRandom(shopTalks[key]), itemName);
@@ -100,12 +108,17 @@ const Shop = (props: Props) => {
     }
     const result = props.onUse(selected);
     if (selected.jokeBy !== undefined) {
-      say(pickRandom(jokeTalks[selected.jokeBy]), selected.name);
+      // ギャグは、オチまで聞いたら「ツッタン」と鳴らす
+      say(pickRandom(jokeTalks[selected.jokeBy]), selected.name, "joke");
     } else if (result.mystery !== undefined) {
       sayRandom(mysteryTalkKeys[result.mystery], selected.name);
     } else if (result.hpChange < 0) {
+      playSound("damage");
       sayRandom("hurt", selected.name);
     } else {
+      if (result.hpChange > 0) {
+        playSound("heal");
+      }
       const isBuff = selected.effects.some((effect) => effect.type === "buff");
       sayRandom(isBuff ? "buff" : "heal", selected.name);
     }
@@ -130,6 +143,7 @@ const Shop = (props: Props) => {
           lines={talk.lines}
           playerName={props.player.name}
           itemName={talk.itemName}
+          endSound={talk.endSound}
         />
 
         <div className="flex flex-wrap items-center gap-2">

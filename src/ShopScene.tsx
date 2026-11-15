@@ -4,11 +4,14 @@ import Star from "./Star";
 import type { Character } from "./characters";
 import { characterNames } from "./characters";
 import type { ShopFace, ShopLine } from "./shopTalks";
+import type { SoundName } from "./sound";
+import { playSansVoiceFor, playSound, startGasterVoice } from "./sound";
 
 type Props = {
   lines: ShopLine[];
   playerName: string;
   itemName: string;
+  endSound?: SoundName; // 最後のセリフを表示し終えたときに鳴らす音 (ギャグのオチなど)
 };
 
 const typingInterval = 50; // 1 文字を表示する間隔 (ミリ秒)
@@ -42,6 +45,7 @@ const ShopScene = (props: Props) => {
       .replaceAll("{item}", props.itemName),
   );
   const isTyping = charCount < chars.length;
+  const isGasterTalking = isTyping && line.speaker === "gaster";
 
   const goNext = () => {
     if (!isLast) {
@@ -56,10 +60,32 @@ const ShopScene = (props: Props) => {
       return;
     }
     const timer = isTyping
-      ? window.setTimeout(() => setCharCount((n) => n + 1), typingInterval)
+      ? window.setTimeout(() => {
+          if (line.speaker === "sans") {
+            playSansVoiceFor(chars[charCount]);
+          }
+          setCharCount((n) => n + 1);
+        }, typingInterval)
       : window.setTimeout(goNext, nextLineDelay);
     return () => window.clearTimeout(timer);
   });
+
+  // ガスターの声は、セリフを表示している間だけくり返し鳴らす
+  useEffect(() => {
+    if (!isGasterTalking) {
+      return;
+    }
+    return startGasterVoice();
+  }, [isGasterTalking]);
+
+  // 会話を最後まで表示し終えたら、オチの音を鳴らす
+  const isFinished = isLast && !isTyping;
+  const endSound = props.endSound;
+  useEffect(() => {
+    if (isFinished && endSound !== undefined) {
+      playSound(endSound);
+    }
+  }, [isFinished, endSound]);
 
   // 200×150 の画像を同じ位置に重ねる (背景 → ガスターの顔 → サンズの顔)
   const layers = [
@@ -83,6 +109,7 @@ const ShopScene = (props: Props) => {
       </div>
       <button
         type="button"
+        data-silent
         onClick={() => (isTyping ? setCharCount(chars.length) : goNext())}
         className="block min-h-24 w-full cursor-pointer ut-box p-3 text-left"
       >

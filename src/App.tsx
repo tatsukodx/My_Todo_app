@@ -49,6 +49,7 @@ import {
   getDamageFor,
 } from "./game";
 import StatusBar from "./StatusBar";
+import { playSound, setBgm } from "./sound";
 import Shop from "./Shop";
 import NameEntry from "./NameEntry";
 import GameOver from "./GameOver";
@@ -224,6 +225,11 @@ const App = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  // メイン画面ではガスターのテーマ、ショップではサンズのテーマを流す
+  useEffect(() => {
+    setBgm(isShopOpen ? "shop" : "main");
+  }, [isShopOpen]);
+
   // 新しく期限切れになったタスクがあれば、その分のダメージを受ける
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -254,6 +260,7 @@ const App = () => {
       });
       setEventScene("damaged");
       setSceneCount((count) => count + 1);
+      playSound("damage");
     }, 0);
     return () => window.clearTimeout(timer);
   }, [todos, repeats, player, now]);
@@ -378,6 +385,9 @@ const App = () => {
             ? `LV ${result.player.lv} に上がった！ 最大HPが増えた`
             : `${result.exp} EXP と ${result.gold} G を手に入れた`,
         );
+      }
+      if (result !== null && result.exp > 0) {
+        playSound(result.levelUps > 0 ? "levelUp" : "win");
       }
       if (result !== null && result.levelUps > 0) {
         playScene("levelUp");

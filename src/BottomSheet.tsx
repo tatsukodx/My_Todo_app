@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { ReactNode, PointerEvent } from "react";
 import { twMerge } from "tailwind-merge";
+import { playSpear } from "./sound";
 
 type Props = {
   title: string;
@@ -13,6 +14,14 @@ const BottomSheet = (props: Props) => {
   // スワイプを始めた位置と、直前の操作がスワイプだったか (クリック扱いしないため)
   const startYRef = useRef<number | null>(null);
   const isSwipedRef = useRef(false);
+
+  // 開くときは槍が出てくる音、閉じるときはその逆再生を鳴らす
+  const changeOpen = (open: boolean) => {
+    if (open !== isOpen) {
+      playSpear(!open);
+    }
+    setIsOpen(open);
+  };
 
   const handlePointerDown = (e: PointerEvent<HTMLButtonElement>) => {
     startYRef.current = e.clientY;
@@ -27,10 +36,10 @@ const BottomSheet = (props: Props) => {
     const moveY = e.clientY - startYRef.current;
     startYRef.current = null;
     if (moveY < -30) {
-      setIsOpen(true);
+      changeOpen(true);
       isSwipedRef.current = true;
     } else if (moveY > 30) {
-      setIsOpen(false);
+      changeOpen(false);
       isSwipedRef.current = true;
     }
   };
@@ -40,7 +49,7 @@ const BottomSheet = (props: Props) => {
       isSwipedRef.current = false;
       return;
     }
-    setIsOpen((open) => !open);
+    changeOpen(!isOpen);
   };
 
   return (
@@ -48,7 +57,7 @@ const BottomSheet = (props: Props) => {
       {isOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/60"
-          onClick={() => setIsOpen(false)}
+          onClick={() => changeOpen(false)}
         />
       )}
       <div
@@ -60,6 +69,7 @@ const BottomSheet = (props: Props) => {
         <button
           type="button"
           aria-expanded={isOpen}
+          data-silent
           onPointerDown={handlePointerDown}
           onPointerUp={handlePointerUp}
           onClick={handleClick}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 import PixelIcon from "./PixelIcon";
 import { heartIcon } from "./pixelIcons";
+import { playSound } from "./sound";
 import type { PixelGrid } from "./pixelIcons";
 
 type Props = {
@@ -24,6 +25,12 @@ const CommandButton = (props: Props) => {
     <button
       type={props.type ?? "button"}
       onClick={props.onClick}
+      // ハートが移ってくるときに、選択が動く音を鳴らす
+      onMouseEnter={() => {
+        if (!props.disabled) {
+          playSound("move");
+        }
+      }}
       disabled={props.disabled}
       aria-label={props["aria-label"]}
       className={twMerge(
