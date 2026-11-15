@@ -17,6 +17,7 @@ import {
   heartIcon,
   plusIcon,
   broomIcon,
+  gearIcon,
   talkIcon,
   reportIcon,
   timetableIcon,
@@ -57,6 +58,7 @@ import type { LogEntry } from "./taskLog";
 import { createLogEntry, recordDone, cancelLatestDone } from "./taskLog";
 import WorkReport from "./WorkReport";
 import ScreenTransition from "./ScreenTransition";
+import SmoothHeight from "./SmoothHeight";
 import type { Point } from "./ScreenTransition";
 import DeadlineInput from "./DeadlineInput";
 import { formatDeadline } from "./deadline";
@@ -192,6 +194,8 @@ const App = () => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [taskLog, setTaskLog] = useState<LogEntry[]>(loadLog);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  // やること一覧の「繰り返しの設定」を開いているか (ふだんはボタンだけにして場所を取らない)
+  const [isRepeatSettingsOpen, setIsRepeatSettingsOpen] = useState(false);
   // 報酬やダメージを画面下に少しだけ表示する
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
 
@@ -661,26 +665,29 @@ const App = () => {
           </CommandButton>
         </div>
         {/* タイムテーブルとカレンダーを切り替えたら、ふわっと出す */}
-        <div key={view} className="motion-safe:animate-fade-in">
-          {view === "timetable" ? (
-            <Timetable
-              date={selectedDate}
-              todos={scheduleTodos}
-              updateIsDone={updateIsDone}
-              now={now}
-            />
-          ) : (
-            <Calendar
-              date={selectedDate}
-              todos={scheduleTodos}
-              onSelectDay={(day) => {
-                setSelectedDate(day);
-                setView("timetable");
-              }}
-              onChangeMonth={setSelectedDate}
-            />
-          )}
-        </div>
+        {/* 切り替えたときや、カレンダーの週の数が変わったときも、高さを滑らかに変える */}
+        <SmoothHeight duration={300} clip={false}>
+          <div key={view} className="motion-safe:animate-fade-in">
+            {view === "timetable" ? (
+              <Timetable
+                date={selectedDate}
+                todos={scheduleTodos}
+                updateIsDone={updateIsDone}
+                now={now}
+              />
+            ) : (
+              <Calendar
+                date={selectedDate}
+                todos={scheduleTodos}
+                onSelectDay={(day) => {
+                  setSelectedDate(day);
+                  setView("timetable");
+                }}
+                onChangeMonth={setSelectedDate}
+              />
+            )}
+          </div>
+        </SmoothHeight>
       </div>
 
       <DialogueBox
@@ -729,48 +736,65 @@ const App = () => {
           emptyMessage="今日の繰り返しタスクはありません。"
         />
         {repeats.length > 0 && (
-          <div className="mt-3 space-y-1 border-2 border-gray-700 p-2 text-sm">
-            <div className="text-gray-400">繰り返しの設定</div>
-            {repeats.map((rule) => (
-              <div
-                key={rule.id}
-                className="flex flex-wrap items-center justify-between gap-2"
-              >
-                <span className="min-w-0 wrap-anywhere">
-                  {rule.name}
-                  <span className="ml-2 text-ut-orange">
-                    {getRepeatLabel(rule.type, rule.customDays)}
-                  </span>
-                  {rule.eventMinutes !== undefined && (
-                    <span className="ml-2 bg-ut-orange px-1 text-xs text-black">
-                      予定
-                    </span>
-                  )}
-                  <span className="ml-2 text-gray-400">
-                    {rule.eventMinutes === undefined
-                      ? formatDeadline(rule.start)
-                      : formatEventTime(
-                          {
-                            start: rule.start,
-                            end: dayjs(rule.start)
-                              .add(rule.eventMinutes, "minute")
-                              .toDate(),
-                          },
-                          "YYYY/MM/DD",
-                        )}{" "}
-                    から
-                  </span>
-                </span>
-                <CommandButton
-                  icon={trashIcon}
-                  size="sm"
-                  onClick={() => stopRepeat(rule.id)}
-                  aria-label={`${rule.name}の繰り返しをやめる`}
-                >
-                  繰り返しをやめる
-                </CommandButton>
-              </div>
-            ))}
+          <div className="mt-3 text-sm">
+            <CommandButton
+              icon={gearIcon}
+              size="sm"
+              onClick={() => setIsRepeatSettingsOpen(!isRepeatSettingsOpen)}
+              aria-expanded={isRepeatSettingsOpen}
+            >
+              繰り返しの設定（{repeats.length}件）
+              <span className="text-xs">
+                {isRepeatSettingsOpen ? "▲" : "▼"}
+              </span>
+            </CommandButton>
+            {/* 押したときだけ、下に設定の一覧を滑らかに開く */}
+            <SmoothHeight>
+              {isRepeatSettingsOpen && (
+                <div className="mt-2 space-y-1 border-2 border-gray-700 p-2 motion-safe:animate-fade-in">
+                  {repeats.map((rule) => (
+                    <div
+                      key={rule.id}
+                      className="flex flex-wrap items-center justify-between gap-2"
+                    >
+                      <span className="min-w-0 wrap-anywhere">
+                        {rule.name}
+                        <span className="ml-2 text-ut-orange">
+                          {getRepeatLabel(rule.type, rule.customDays)}
+                        </span>
+                        {rule.eventMinutes !== undefined && (
+                          <span className="ml-2 bg-ut-orange px-1 text-xs text-black">
+                            予定
+                          </span>
+                        )}
+                        <span className="ml-2 text-gray-400">
+                          {rule.eventMinutes === undefined
+                            ? formatDeadline(rule.start)
+                            : formatEventTime(
+                                {
+                                  start: rule.start,
+                                  end: dayjs(rule.start)
+                                    .add(rule.eventMinutes, "minute")
+                                    .toDate(),
+                                },
+                                "YYYY/MM/DD",
+                              )}{" "}
+                          から
+                        </span>
+                      </span>
+                      <CommandButton
+                        icon={trashIcon}
+                        size="sm"
+                        onClick={() => stopRepeat(rule.id)}
+                        aria-label={`${rule.name}の繰り返しをやめる`}
+                      >
+                        繰り返しをやめる
+                      </CommandButton>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </SmoothHeight>
           </div>
         )}
 
@@ -820,214 +844,228 @@ const App = () => {
               addNewTodo();
             }}
             aria-labelledby="newTodoHeading"
-            className="relative w-full max-w-xl space-y-3 ut-box p-4 motion-safe:animate-pop-in"
+            className="relative w-full max-w-xl ut-box p-4 motion-safe:animate-pop-in"
           >
-            <div className="flex items-center justify-between">
-              <h2 id="newTodoHeading" className="text-lg">
-                <Star /> 新しい{newTodoKind === "event" ? "予定" : "タスク"}
-                の追加
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsAddFormOpen(false)}
-                aria-label="閉じる"
-                className="cursor-pointer px-2 text-xl text-gray-400 hover:text-white"
-              >
-                ×
-              </button>
-            </div>
-
-            <fieldset>
-              <legend className="sr-only">種類</legend>
-              <div className="flex gap-2">
-                {(
-                  [
-                    ["task", "タスク", "期限までにやること"],
-                    ["event", "予定", "習い事など、時間が決まっていること"],
-                  ] as const
-                ).map(([kind, label, note]) => (
-                  <label
-                    key={kind}
-                    className={twMerge(
-                      "flex grow cursor-pointer flex-col border-2 border-gray-600 px-3 py-1 text-gray-400",
-                      newTodoKind === kind && "border-ut-yellow text-ut-yellow",
-                    )}
+            {/* タスクと予定の切り替えや、エラー・ホイールが出たときに、枠を滑らかに伸び縮みさせる */}
+            <SmoothHeight>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 id="newTodoHeading" className="text-lg">
+                    <Star /> 新しい{newTodoKind === "event" ? "予定" : "タスク"}
+                    の追加
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddFormOpen(false)}
+                    aria-label="閉じる"
+                    className="cursor-pointer px-2 text-xl text-gray-400 hover:text-white"
                   >
-                    <span className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="todoKind"
-                        value={kind}
-                        checked={newTodoKind === kind}
-                        onChange={() => setNewTodoKind(kind)}
-                        className="accent-ut-yellow"
-                      />
-                      {label}
-                    </span>
-                    <span className="text-xs">{note}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <div>
-              <div className="flex items-center space-x-2">
-                <label className="text-ut-yellow" htmlFor="newTodoName">
-                  名前
-                </label>
-                <input
-                  id="newTodoName"
-                  name="todoName"
-                  type="text"
-                  required
-                  autoFocus
-                  value={newTodoName}
-                  onChange={updateNewTodoName}
-                  aria-invalid={showNewTodoNameError}
-                  aria-describedby={
-                    showNewTodoNameError ? "newTodoNameError" : undefined
-                  }
-                  className={twMerge(
-                    "min-w-0 grow ut-input p-2",
-                    showNewTodoNameError && "border-ut-red outline-ut-red",
-                  )}
-                  placeholder="2文字以上、32文字以内で入力してください"
-                />
-              </div>
-              {showNewTodoNameError && (
-                <div
-                  id="newTodoNameError"
-                  aria-live="polite"
-                  className="mt-1 ml-10 flex items-center space-x-1 text-sm text-ut-red"
-                >
-                  <FontAwesomeIcon
-                    icon={faTriangleExclamation}
-                    className="mr-0.5"
-                  />
-                  <div>{newTodoNameError}</div>
+                    ×
+                  </button>
                 </div>
-              )}
-            </div>
 
-            <fieldset>
-              <legend className="mb-1 text-ut-yellow">優先度</legend>
-              <div className="flex gap-5">
-                {[1, 2, 3].map((value) => (
-                  <label key={value} className="flex items-center space-x-1">
+                <fieldset>
+                  <legend className="sr-only">種類</legend>
+                  <div className="flex gap-2">
+                    {(
+                      [
+                        ["task", "タスク", "期限までにやること"],
+                        ["event", "予定", "習い事など、時間が決まっていること"],
+                      ] as const
+                    ).map(([kind, label, note]) => (
+                      <label
+                        key={kind}
+                        className={twMerge(
+                          "flex grow cursor-pointer flex-col border-2 border-gray-600 px-3 py-1 text-gray-400",
+                          newTodoKind === kind &&
+                            "border-ut-yellow text-ut-yellow",
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="todoKind"
+                            value={kind}
+                            checked={newTodoKind === kind}
+                            onChange={() => setNewTodoKind(kind)}
+                            className="accent-ut-yellow"
+                          />
+                          {label}
+                        </span>
+                        <span className="text-xs">{note}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <label className="text-ut-yellow" htmlFor="newTodoName">
+                      名前
+                    </label>
                     <input
-                      id={`priority-${value}`}
-                      name="priorityGroup"
-                      type="radio"
-                      value={value}
-                      checked={newTodoPriority === value}
-                      onChange={updateNewTodoPriority}
-                      className="accent-ut-yellow"
+                      id="newTodoName"
+                      name="todoName"
+                      type="text"
+                      required
+                      autoFocus
+                      value={newTodoName}
+                      onChange={updateNewTodoName}
+                      aria-invalid={showNewTodoNameError}
+                      aria-describedby={
+                        showNewTodoNameError ? "newTodoNameError" : undefined
+                      }
+                      className={twMerge(
+                        "min-w-0 grow ut-input p-2",
+                        showNewTodoNameError && "border-ut-red outline-ut-red",
+                      )}
+                      placeholder="2文字以上、32文字以内で入力してください"
                     />
-                    <span>
-                      {value} ({priorityLabels[value]})
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+                  </div>
+                  {showNewTodoNameError && (
+                    <div
+                      id="newTodoNameError"
+                      aria-live="polite"
+                      className="mt-1 ml-10 flex items-center space-x-1 text-sm text-ut-red"
+                    >
+                      <FontAwesomeIcon
+                        icon={faTriangleExclamation}
+                        className="mr-0.5"
+                      />
+                      <div>{newTodoNameError}</div>
+                    </div>
+                  )}
+                </div>
 
-            {newTodoKind === "event" ? (
-              <div className="space-y-1">
-                <div className="text-ut-yellow">
-                  {newTodoRepeat === "none" ? "日時" : "1回目の日時"}
-                </div>
-                <EventTimeInput value={newEvent} onChange={setNewEvent} />
-                <div className="text-sm text-gray-400">
-                  終わったあと、その日のうちにチェックすると報酬がもらえます
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <div className="text-ut-yellow">
-                  {newTodoRepeat === "none" ? "期限" : "開始"}
-                </div>
-                <DeadlineInput
-                  id="deadline"
-                  label={newTodoRepeat === "none" ? "期限" : "開始"}
-                  decideLabel={
-                    newTodoRepeat === "none" ? "期限を決める" : "開始日を決める"
-                  }
-                  value={newTodoDeadline}
-                  onChange={setNewTodoDeadline}
-                />
-                {newTodoRepeat === "none" && newTodoDeadline === null && (
-                  <div className="text-sm text-gray-400">
-                    期限を決めなければ「とりあえず後でやる」に入ります
+                <fieldset>
+                  <legend className="mb-1 text-ut-yellow">優先度</legend>
+                  <div className="flex gap-5">
+                    {[1, 2, 3].map((value) => (
+                      <label
+                        key={value}
+                        className="flex items-center space-x-1"
+                      >
+                        <input
+                          id={`priority-${value}`}
+                          name="priorityGroup"
+                          type="radio"
+                          value={value}
+                          checked={newTodoPriority === value}
+                          onChange={updateNewTodoPriority}
+                          className="accent-ut-yellow"
+                        />
+                        <span>
+                          {value} ({priorityLabels[value]})
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                {newTodoKind === "event" ? (
+                  <div className="space-y-1">
+                    <div className="text-ut-yellow">
+                      {newTodoRepeat === "none" ? "日時" : "1回目の日時"}
+                    </div>
+                    <EventTimeInput value={newEvent} onChange={setNewEvent} />
+                    <div className="text-sm text-gray-400">
+                      終わったあと、その日のうちにチェックすると報酬がもらえます
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="text-ut-yellow">
+                      {newTodoRepeat === "none" ? "期限" : "開始"}
+                    </div>
+                    <DeadlineInput
+                      id="deadline"
+                      label={newTodoRepeat === "none" ? "期限" : "開始"}
+                      decideLabel={
+                        newTodoRepeat === "none"
+                          ? "期限を決める"
+                          : "開始日を決める"
+                      }
+                      value={newTodoDeadline}
+                      onChange={setNewTodoDeadline}
+                    />
+                    {newTodoRepeat === "none" && newTodoDeadline === null && (
+                      <div className="text-sm text-gray-400">
+                        期限を決めなければ「とりあえず後でやる」に入ります
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
 
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <label className="text-ut-yellow" htmlFor="repeat">
-                  繰り返し
-                </label>
-                <select
-                  id="repeat"
-                  value={newTodoRepeat}
-                  onChange={(e) =>
-                    setNewTodoRepeat(e.target.value as RepeatType)
-                  }
-                  className="ut-input py-0.5"
-                >
-                  {repeatOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {newTodoRepeat === "custom" && (
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      min={1}
-                      max={365}
-                      value={newTodoRepeatDays}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="text-ut-yellow" htmlFor="repeat">
+                      繰り返し
+                    </label>
+                    <select
+                      id="repeat"
+                      value={newTodoRepeat}
                       onChange={(e) =>
-                        setNewTodoRepeatDays(
-                          Math.min(365, Math.max(1, Number(e.target.value))),
-                        )
+                        setNewTodoRepeat(e.target.value as RepeatType)
                       }
-                      className="w-16 ut-input py-0.5"
-                    />
-                    日ごと
-                  </label>
-                )}
-              </div>
-              {isRepeatInvalid && (
-                <div className="flex items-center gap-1 text-sm text-ut-red">
-                  <FontAwesomeIcon icon={faTriangleExclamation} />
-                  繰り返すときは、開始日時を入力してください
+                      className="ut-input py-0.5"
+                    >
+                      {repeatOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    {newTodoRepeat === "custom" && (
+                      <label className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={1}
+                          max={365}
+                          value={newTodoRepeatDays}
+                          onChange={(e) =>
+                            setNewTodoRepeatDays(
+                              Math.min(
+                                365,
+                                Math.max(1, Number(e.target.value)),
+                              ),
+                            )
+                          }
+                          className="w-16 ut-input py-0.5"
+                        />
+                        日ごと
+                      </label>
+                    )}
+                  </div>
+                  {isRepeatInvalid && (
+                    <div className="flex items-center gap-1 text-sm text-ut-red">
+                      <FontAwesomeIcon icon={faTriangleExclamation} />
+                      繰り返すときは、開始日時を入力してください
+                    </div>
+                  )}
+                  {previewDates.length > 0 && (
+                    <div className="text-sm text-gray-400">
+                      <Star />{" "}
+                      {previewDates
+                        .map((date) => formatDeadline(date, "M/D"))
+                        .join("、")}{" "}
+                      …… とスケジュールに入ります。
+                      <br />
+                      今日の回は「今日の繰り返しタスク」に入ります
+                    </div>
+                  )}
                 </div>
-              )}
-              {previewDates.length > 0 && (
-                <div className="text-sm text-gray-400">
-                  <Star />{" "}
-                  {previewDates
-                    .map((date) => formatDeadline(date, "M/D"))
-                    .join("、")}{" "}
-                  …… とスケジュールに入ります。
-                  <br />
-                  今日の回は「今日の繰り返しタスク」に入ります
-                </div>
-              )}
-            </div>
 
-            <CommandButton
-              icon={plusIcon}
-              type="submit"
-              disabled={
-                isNewTodoNameInvalid || isRepeatInvalid || isEventInvalid
-              }
-            >
-              追加
-            </CommandButton>
+                <CommandButton
+                  icon={plusIcon}
+                  type="submit"
+                  disabled={
+                    isNewTodoNameInvalid || isRepeatInvalid || isEventInvalid
+                  }
+                >
+                  追加
+                </CommandButton>
+              </div>
+            </SmoothHeight>
           </form>
         </div>
       )}

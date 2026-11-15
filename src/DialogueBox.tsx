@@ -4,6 +4,7 @@ import { characterNames } from "./characters";
 import type { Character, Expression } from "./characters";
 import type { DialogueLine } from "./dialogues";
 import CharacterPortrait from "./CharacterPortrait";
+import SmoothHeight from "./SmoothHeight";
 import { twMerge } from "tailwind-merge";
 import type { GasterWord } from "./wingdings";
 import { getGasterWords, getWordSteps, toWingdings } from "./wingdings";
@@ -163,66 +164,75 @@ const DialogueBox = (props: Props) => {
         type="button"
         onClick={handleClick}
         data-silent
-        className="flex w-full cursor-pointer items-start gap-2 border-4 border-white bg-black/70 p-2 text-left sm:gap-3 sm:p-3"
+        className="block w-full cursor-pointer border-4 border-white bg-black/70 p-2 text-left sm:p-3"
       >
-        {/* 左にサンズ、右にガスター。話していない方は暗くする */}
-        <CharacterPortrait
-          character="sans"
-          expression={getExpression(lines, index, "sans")}
-          className={twMerge(
-            portraitSize,
-            line.speaker !== "sans" && "opacity-40",
-            // セリフを表示している間は、話している方をカクカク上下させる
-            isTyping && line.speaker === "sans" && "motion-safe:animate-talk",
-          )}
-        />
-        <div className="min-w-0 grow">
-          <div
-            className={twMerge(
-              "mb-1 text-ut-yellow",
-              line.speaker === "gaster" && "text-right",
-            )}
-          >
-            {characterNames[line.speaker]}
+        {/* セリフが長くて行が増えても、枠が滑らかに伸び縮みする */}
+        <SmoothHeight>
+          <div className="flex items-start gap-2 sm:gap-3">
+            {/* 左にサンズ、右にガスター。話していない方は暗くする */}
+            <CharacterPortrait
+              character="sans"
+              expression={getExpression(lines, index, "sans")}
+              className={twMerge(
+                portraitSize,
+                line.speaker !== "sans" && "opacity-40",
+                // セリフを表示している間は、話している方をカクカク上下させる
+                isTyping &&
+                  line.speaker === "sans" &&
+                  "motion-safe:animate-talk",
+              )}
+            />
+            <div className="min-w-0 grow">
+              <div
+                className={twMerge(
+                  "mb-1 text-ut-yellow",
+                  line.speaker === "gaster" && "text-right",
+                )}
+              >
+                {characterNames[line.speaker]}
+              </div>
+              {/* 読み上げ用には全文を 1 回だけ伝え、見た目は 1 文字ずつ表示する */}
+              <span className="sr-only" aria-live="polite">
+                {chars.join("")}
+              </span>
+              <div
+                aria-hidden="true"
+                className={twMerge(
+                  "min-h-14 text-lg",
+                  line.speaker === "sans" && "font-sans-voice",
+                )}
+              >
+                <Star />{" "}
+                {gasterWords === null
+                  ? chars.slice(0, charCount).join("")
+                  : renderGasterWords(gasterWords, charCount)}
+              </div>
+              <div className="text-right text-sm text-gray-400">
+                {!isTyping && (
+                  <>
+                    {/* 「次へ進める」ことが分かるよう、矢印を下に弾ませる */}
+                    <span className="inline-block motion-safe:animate-nudge-down">
+                      ▼
+                    </span>{" "}
+                    {isLast ? "とじる" : "つぎへ"}{" "}
+                  </>
+                )}
+                ({index + 1}/{lines.length})
+              </div>
+            </div>
+            <CharacterPortrait
+              character="gaster"
+              expression={getExpression(lines, index, "gaster")}
+              className={twMerge(
+                portraitSize,
+                line.speaker !== "gaster" && "opacity-40",
+                isTyping &&
+                  line.speaker === "gaster" &&
+                  "motion-safe:animate-talk",
+              )}
+            />
           </div>
-          {/* 読み上げ用には全文を 1 回だけ伝え、見た目は 1 文字ずつ表示する */}
-          <span className="sr-only" aria-live="polite">
-            {chars.join("")}
-          </span>
-          <div
-            aria-hidden="true"
-            className={twMerge(
-              "min-h-14 text-lg",
-              line.speaker === "sans" && "font-sans-voice",
-            )}
-          >
-            <Star />{" "}
-            {gasterWords === null
-              ? chars.slice(0, charCount).join("")
-              : renderGasterWords(gasterWords, charCount)}
-          </div>
-          <div className="text-right text-sm text-gray-400">
-            {!isTyping && (
-              <>
-                {/* 「次へ進める」ことが分かるよう、矢印を下に弾ませる */}
-                <span className="inline-block motion-safe:animate-nudge-down">
-                  ▼
-                </span>{" "}
-                {isLast ? "とじる" : "つぎへ"}{" "}
-              </>
-            )}
-            ({index + 1}/{lines.length})
-          </div>
-        </div>
-        <CharacterPortrait
-          character="gaster"
-          expression={getExpression(lines, index, "gaster")}
-          className={twMerge(
-            portraitSize,
-            line.speaker !== "gaster" && "opacity-40",
-            isTyping && line.speaker === "gaster" && "motion-safe:animate-talk",
-          )}
-        />
+        </SmoothHeight>
       </button>
     </div>
   );

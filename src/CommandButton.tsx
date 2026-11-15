@@ -14,6 +14,7 @@ type Props = {
   size?: "md" | "sm";
   className?: string;
   "aria-label"?: string;
+  "aria-expanded"?: boolean; // 押すと何かが開くボタンのとき、開いているか
 };
 
 // 戦闘画面のコマンドのようなボタン。選ぶ (マウスを乗せる・フォーカスする) と
@@ -33,6 +34,7 @@ const CommandButton = (props: Props) => {
       }}
       disabled={props.disabled}
       aria-label={props["aria-label"]}
+      aria-expanded={props["aria-expanded"]}
       className={twMerge(
         "group flex shrink-0 ut-button items-center gap-2 font-bold tracking-wider",
         "focus-visible:border-ut-yellow focus-visible:text-ut-yellow focus-visible:outline-none",

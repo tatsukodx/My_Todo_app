@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import Star from "./Star";
+import SmoothHeight from "./SmoothHeight";
 import type { Character } from "./characters";
 import { characterNames } from "./characters";
 import type { ShopFace, ShopLine } from "./shopTalks";
@@ -121,23 +122,26 @@ const ShopScene = (props: Props) => {
         onClick={() => (isTyping ? setCharCount(chars.length) : goNext())}
         className="block min-h-24 w-full cursor-pointer ut-box p-3 text-left"
       >
-        <div className="mb-1 text-sm text-ut-yellow">
-          {characterNames[line.speaker]}
-        </div>
-        <span className="sr-only" aria-live="polite">
-          {chars.join("")}
-        </span>
-        <div
-          aria-hidden="true"
-          className={twMerge(line.speaker === "sans" && "font-sans-voice")}
-        >
-          <Star /> {chars.slice(0, charCount).join("")}
-          {!isTyping && !isLast && (
-            <span className="ml-1 inline-block text-gray-400 motion-safe:animate-nudge-down">
-              ▼
-            </span>
-          )}
-        </div>
+        {/* セリフの長さで行数が変わっても、枠が滑らかに伸び縮みする */}
+        <SmoothHeight>
+          <div className="mb-1 text-sm text-ut-yellow">
+            {characterNames[line.speaker]}
+          </div>
+          <span className="sr-only" aria-live="polite">
+            {chars.join("")}
+          </span>
+          <div
+            aria-hidden="true"
+            className={twMerge(line.speaker === "sans" && "font-sans-voice")}
+          >
+            <Star /> {chars.slice(0, charCount).join("")}
+            {!isTyping && !isLast && (
+              <span className="ml-1 inline-block text-gray-400 motion-safe:animate-nudge-down">
+                ▼
+              </span>
+            )}
+          </div>
+        </SmoothHeight>
       </button>
     </div>
   );

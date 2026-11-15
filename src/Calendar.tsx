@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
 import type { Todo } from "./types";
 import { getSortTime } from "./scheduleEvent";
+import SmoothHeight from "./SmoothHeight";
 
 type Props = {
   date: Date; // 選んでいる日 (この日の月を表示する)
@@ -156,64 +157,67 @@ const Calendar = (props: Props) => {
           </div>
         ))}
       </div>
-      <div
-        key={monthKey}
-        className={twMerge(
-          "grid grid-cols-7 gap-px",
-          shown.direction === "next" && "animate-slide-from-below",
-          shown.direction === "prev" && "animate-slide-from-above",
-        )}
-      >
-        {cells.map((day, i) => {
-          if (day === null) {
-            return <div key={`empty-${i}`} />;
-          }
-          const dayTodos = props.todos
-            .filter((todo) => dayjs(todo.deadline).isSame(day, "day"))
-            .sort((a, b) => getSortTime(a) - getSortTime(b));
-          const hiddenCount = dayTodos.length - maxVisibleTodos;
-          return (
-            <button
-              key={day.date()}
-              type="button"
-              onClick={() => props.onSelectDay(day.toDate())}
-              aria-label={`${day.format("M月D日")} 予定${dayTodos.length}件`}
-              className={twMerge(
-                "flex min-h-16 min-w-0 cursor-pointer flex-col border-2 border-gray-700 p-0.5 text-left hover:border-ut-orange sm:min-h-20",
-                day.isSame(selected, "day") && "border-ut-yellow",
-              )}
-            >
-              {/* 選んでいる日の数字はゆらゆら揺らし、今日の数字はキラッと光らせる */}
-              <span
+      {/* 週の数が違う月に移ったとき、白い枠ごと滑らかに伸び縮みさせる */}
+      <SmoothHeight duration={300}>
+        <div
+          key={monthKey}
+          className={twMerge(
+            "grid grid-cols-7 gap-px",
+            shown.direction === "next" && "animate-slide-from-below",
+            shown.direction === "prev" && "animate-slide-from-above",
+          )}
+        >
+          {cells.map((day, i) => {
+            if (day === null) {
+              return <div key={`empty-${i}`} />;
+            }
+            const dayTodos = props.todos
+              .filter((todo) => dayjs(todo.deadline).isSame(day, "day"))
+              .sort((a, b) => getSortTime(a) - getSortTime(b));
+            const hiddenCount = dayTodos.length - maxVisibleTodos;
+            return (
+              <button
+                key={day.date()}
+                type="button"
+                onClick={() => props.onSelectDay(day.toDate())}
+                aria-label={`${day.format("M月D日")} 予定${dayTodos.length}件`}
                 className={twMerge(
-                  "self-start text-sm text-gray-400",
-                  day.isSame(today, "day") &&
-                    "text-ut-yellow motion-safe:animate-twinkle",
-                  day.isSame(selected, "day") && "motion-safe:animate-wobble",
+                  "flex min-h-16 min-w-0 cursor-pointer flex-col border-2 border-gray-700 p-0.5 text-left hover:border-ut-orange sm:min-h-20",
+                  day.isSame(selected, "day") && "border-ut-yellow",
                 )}
               >
-                {day.date()}
-              </span>
-              {dayTodos.slice(0, maxVisibleTodos).map((todo) => (
+                {/* 選んでいる日の数字はゆらゆら揺らし、今日の数字はキラッと光らせる */}
                 <span
-                  key={todo.id}
                   className={twMerge(
-                    "truncate text-[10px] leading-tight sm:text-xs",
-                    todo.isDone && "text-gray-500 line-through",
+                    "self-start text-sm text-gray-400",
+                    day.isSame(today, "day") &&
+                      "text-ut-yellow motion-safe:animate-twinkle",
+                    day.isSame(selected, "day") && "motion-safe:animate-wobble",
                   )}
                 >
-                  {todo.name}
+                  {day.date()}
                 </span>
-              ))}
-              {hiddenCount > 0 && (
-                <span className="text-[10px] text-ut-orange sm:text-xs">
-                  +{hiddenCount}件
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+                {dayTodos.slice(0, maxVisibleTodos).map((todo) => (
+                  <span
+                    key={todo.id}
+                    className={twMerge(
+                      "truncate text-[10px] leading-tight sm:text-xs",
+                      todo.isDone && "text-gray-500 line-through",
+                    )}
+                  >
+                    {todo.name}
+                  </span>
+                ))}
+                {hiddenCount > 0 && (
+                  <span className="text-[10px] text-ut-orange sm:text-xs">
+                    +{hiddenCount}件
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </SmoothHeight>
     </div>
   );
 };

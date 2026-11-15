@@ -5,6 +5,7 @@ import { getMaxHp, isScreenEffectActive, items } from "./game";
 import type { ShopLine, ShopTalkKey } from "./shopTalks";
 import { itemTalks, jokeTalks, shopTalks } from "./shopTalks";
 import ShopScene from "./ShopScene";
+import SmoothHeight from "./SmoothHeight";
 import type { SoundName } from "./sound";
 import { playSound } from "./sound";
 import CommandButton from "./CommandButton";
@@ -178,57 +179,60 @@ const Shop = (props: Props) => {
         </div>
 
         <div className="ut-box p-2">
-          {listItems.length === 0 && (
-            <div className="p-2 text-gray-500">
-              ＊ 持っているアイテムはありません
-            </div>
-          )}
-          {pageItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => selectItem(item)}
-              className={twMerge(
-                "flex w-full cursor-pointer items-center gap-2 px-2 py-1.5 text-left hover:text-ut-yellow",
-                item.id === selectedId && "text-ut-yellow",
-              )}
-            >
-              <span className="w-4 text-ut-red">
-                {item.id === selectedId ? "♥" : ""}
-              </span>
-              <span className="grow">{item.name}</span>
-              <span className="text-sm text-gray-400">
-                {tab === "buy"
-                  ? `${item.price} G`
-                  : `×${props.player.items[item.id]}`}
-              </span>
-            </button>
-          ))}
-          {pageCount > 1 && (
-            <div className="mt-1 flex items-center justify-center gap-4 border-t border-gray-700 pt-1 text-sm">
+          {/* 「かう」「つかう」の切り替えで品数が変わっても、枠を滑らかに伸び縮みさせる */}
+          <SmoothHeight>
+            {listItems.length === 0 && (
+              <div className="p-2 text-gray-500">
+                ＊ 持っているアイテムはありません
+              </div>
+            )}
+            {pageItems.map((item) => (
               <button
+                key={item.id}
                 type="button"
-                onClick={() => setPage(currentPage - 1)}
-                disabled={currentPage === 0}
-                aria-label="前のページ"
-                className="cursor-pointer px-2 text-ut-orange hover:text-ut-yellow disabled:cursor-not-allowed disabled:opacity-30"
+                onClick={() => selectItem(item)}
+                className={twMerge(
+                  "flex w-full cursor-pointer items-center gap-2 px-2 py-1.5 text-left hover:text-ut-yellow",
+                  item.id === selectedId && "text-ut-yellow",
+                )}
               >
-                ◀
+                <span className="w-4 text-ut-red">
+                  {item.id === selectedId ? "♥" : ""}
+                </span>
+                <span className="grow">{item.name}</span>
+                <span className="text-sm text-gray-400">
+                  {tab === "buy"
+                    ? `${item.price} G`
+                    : `×${props.player.items[item.id]}`}
+                </span>
               </button>
-              <span className="text-gray-400">
-                {currentPage + 1} / {pageCount}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPage(currentPage + 1)}
-                disabled={currentPage === pageCount - 1}
-                aria-label="次のページ"
-                className="cursor-pointer px-2 text-ut-orange hover:text-ut-yellow disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                ▶
-              </button>
-            </div>
-          )}
+            ))}
+            {pageCount > 1 && (
+              <div className="mt-1 flex items-center justify-center gap-4 border-t border-gray-700 pt-1 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setPage(currentPage - 1)}
+                  disabled={currentPage === 0}
+                  aria-label="前のページ"
+                  className="cursor-pointer px-2 text-ut-orange hover:text-ut-yellow disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  ◀
+                </button>
+                <span className="text-gray-400">
+                  {currentPage + 1} / {pageCount}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage(currentPage + 1)}
+                  disabled={currentPage === pageCount - 1}
+                  aria-label="次のページ"
+                  className="cursor-pointer px-2 text-ut-orange hover:text-ut-yellow disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  ▶
+                </button>
+              </div>
+            )}
+          </SmoothHeight>
         </div>
       </div>
 

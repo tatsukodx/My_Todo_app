@@ -1,6 +1,7 @@
 import Star from "./Star";
 import type { Todo } from "./types";
 import TodoItem from "./TodoItem";
+import SmoothHeight from "./SmoothHeight";
 
 type Props = {
   todos: Todo[];
@@ -22,19 +23,22 @@ const TodoList = (props: Props) => {
     );
   }
 
+  // タスクが増えたり消えたりしたときに、下の欄がカクッと動かないようにする
   return (
-    <div className="flex flex-col gap-2">
-      {todos.map((todo) => (
-        <TodoItem
-          key={todo.id}
-          todo={todo}
-          updateIsDone={props.updateIsDone}
-          updateDeadline={props.updateDeadline}
-          remove={props.remove}
-          now={props.now}
-        />
-      ))}
-    </div>
+    <SmoothHeight>
+      <div className="flex flex-col gap-2">
+        {todos.map((todo) => (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            updateIsDone={props.updateIsDone}
+            updateDeadline={props.updateDeadline}
+            remove={props.remove}
+            now={props.now}
+          />
+        ))}
+      </div>
+    </SmoothHeight>
   );
 };
 
