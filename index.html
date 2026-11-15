@@ -11,9 +11,28 @@
       href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=DotGothic16&family=Yusei+Magic&display=swap"
       rel="stylesheet"
     />
+    <!-- プログラムが届くまでの一瞬も、白くならないようにする -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #000;
+      }
+      .boot-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-family: "DotGothic16", sans-serif;
+        letter-spacing: 0.1em;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- 中身は、プログラムが動き出すと読み込み画面に置き換わる -->
+    <div id="root"><div class="boot-loading">LOADING…</div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

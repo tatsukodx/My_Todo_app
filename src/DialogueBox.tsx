@@ -12,6 +12,7 @@ import { playSansVoiceFor, startGasterVoice } from "./sound";
 type Props = {
   patterns: DialogueLine[][];
   count: number;
+  openDelay?: number; // 出てくるまで待つ時間 (ミリ秒)
 };
 
 const typingInterval = 50; // 1 文字を表示する間隔 (ミリ秒)
@@ -106,11 +107,12 @@ const DialogueBox = (props: Props) => {
     }
   };
 
-  // 表示されてすぐ、上からにょきっと出す
+  // 表示されたら (openDelay があれば少し待ってから)、上からにょきっと出す
+  const openDelay = props.openDelay ?? 50;
   useEffect(() => {
-    const timer = window.setTimeout(() => setIsOpen(true), 50);
+    const timer = window.setTimeout(() => setIsOpen(true), openDelay);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [openDelay]);
 
   // 1 文字ずつ表示し、表示し終えたら少し待って次のセリフへ進む
   // (依存配列を書かず、描画のたびに「次の 1 歩」のタイマーを 1 つだけ予約し直す)

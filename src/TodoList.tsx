@@ -8,6 +8,7 @@ type Props = {
   updateDeadline: (id: string, deadline: Date | null) => void;
   remove: (id: string) => void;
   emptyMessage: string;
+  now: number; // 今の時刻 (期限までの残り時間で色を変えるのに使う)
 };
 
 const TodoList = (props: Props) => {
@@ -30,6 +31,7 @@ const TodoList = (props: Props) => {
           updateIsDone={props.updateIsDone}
           updateDeadline={props.updateDeadline}
           remove={props.remove}
+          now={props.now}
         />
       ))}
     </div>

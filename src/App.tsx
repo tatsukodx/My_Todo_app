@@ -233,6 +233,35 @@ const App = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  // 次に期限が来るタスクの、期限ちょうどに今の日時を更新する
+  // (30 秒ごとの確認を待たず、期限を過ぎた瞬間にダメージを受けるように)
+  useEffect(() => {
+    const current = Date.now();
+    const upcoming = [...todos, ...getTodayRepeatTodos(repeats)]
+      .filter((todo) => !todo.isDone && todo.deadline !== null)
+      .map((todo) => todo.deadline!.getTime())
+      .filter((time) => time >= current);
+    if (upcoming.length === 0) {
+      return;
+    }
+    // (setTimeout は長すぎる時間を待てないので、1 日より先なら 1 日後に見直す)
+    const delay = Math.min(Math.min(...upcoming) - current + 1, 24 * 3600_000);
+    const timer = window.setTimeout(() => setNow(Date.now()), delay);
+    return () => window.clearTimeout(timer);
+  }, [todos, repeats, now]);
+
+  // 別のタブを見ていた間はタイマーが遅れるので、戻ってきたらすぐ確かめる
+  useEffect(() => {
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") {
+        setNow(Date.now());
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisible);
+  }, []);
+
   // メイン画面ではガスターのテーマ、ショップではサンズのテーマを流す
   useEffect(() => {
     setBgm(isShopOpen ? "shop" : "main");
@@ -594,6 +623,8 @@ const App = () => {
         key={`${currentScene}-${sceneCount}`}
         patterns={scenes[currentScene]}
         count={uncompletedCount}
+        // ページを開いた直後の会話は、画面が落ち着いてから 1 秒後に始める
+        openDelay={sceneCount === 0 ? 1000 : undefined}
       />
 
       {/* 豆を挽きすぎたコーヒーの効果中は、画面全体に虹色を重ねる (操作のじゃまはしない) */}
@@ -630,6 +661,7 @@ const App = () => {
           updateIsDone={updateIsDone}
           updateDeadline={updateTodoDeadline}
           remove={remove}
+          now={now}
           emptyMessage="今日の繰り返しタスクはありません。"
         />
         {repeats.length > 0 && (
@@ -670,6 +702,7 @@ const App = () => {
           updateIsDone={updateIsDone}
           updateDeadline={updateTodoDeadline}
           remove={remove}
+          now={now}
           emptyMessage="日時が決まっているタスクはありません。"
         />
 
@@ -681,6 +714,7 @@ const App = () => {
           updateIsDone={updateIsDone}
           updateDeadline={updateTodoDeadline}
           remove={remove}
+          now={now}
           emptyMessage="後回しのタスクはありません。"
         />
 

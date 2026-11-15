@@ -333,6 +333,11 @@ function unlockAudio() {
   if (!enabled) {
     return;
   }
+  // ガスターがしゃべっている途中に初めて画面を触ったときは、そこから声を出す
+  // (サンズの声は 1 文字ごとに鳴らし直すので、触った後の文字から自然に鳴る)
+  if (gasterTalkers > 0 && gasterVoice.paused) {
+    void gasterVoice.play().catch(() => {});
+  }
   const context = getAudioContext();
   const start = () => {
     if (wantedBgm !== null && currentBgm === null) {

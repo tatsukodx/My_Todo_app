@@ -15,7 +15,10 @@ type Props = {
   updateIsDone: (id: string, value: boolean) => void;
   updateDeadline: (id: string, deadline: Date | null) => void;
   remove: (id: string) => void;
+  now: number; // 今の時刻 (期限切れかどうかと、期限の文字の色に使う)
 };
+
+const hour = 60 * 60 * 1000;
 
 const TodoItem = (props: Props) => {
   const todo = props.todo;
@@ -26,7 +29,21 @@ const TodoItem = (props: Props) => {
     endOfDay(new Date()),
   );
   const isOverdue =
-    !todo.isDone && todo.deadline !== null && todo.deadline < new Date();
+    !todo.isDone &&
+    todo.deadline !== null &&
+    todo.deadline.getTime() < props.now;
+  // 期限までの残り時間で、期限の文字の色を変える
+  // (1 時間以内 → 赤、24 時間以内 → 黄色、それより先 → 緑。完了済みは灰色のまま)
+  const remaining =
+    todo.deadline === null ? null : todo.deadline.getTime() - props.now;
+  const deadlineColor =
+    todo.isDone || remaining === null
+      ? "text-gray-400"
+      : remaining <= hour
+        ? "text-ut-red"
+        : remaining <= 24 * hour
+          ? "text-ut-yellow"
+          : "text-ut-green";
 
   const saveDeadline = () => {
     if (deadlineInput === null) {
@@ -79,10 +96,7 @@ const TodoItem = (props: Props) => {
           </span>
           {todo.deadline && (
             <span
-              className={twMerge(
-                "flex items-center text-sm text-gray-400",
-                isOverdue && "text-ut-red",
-              )}
+              className={twMerge("flex items-center text-sm", deadlineColor)}
             >
               <FontAwesomeIcon icon={faClock} className="mr-1" />
               {formatDeadline(todo.deadline)}
