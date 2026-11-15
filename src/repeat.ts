@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import type { Todo } from "./types";
+import { createEventTodo } from "./scheduleEvent";
 
 export type RepeatType =
   "none" | "daily" | "weekly" | "biweekly" | "monthly" | "custom";
@@ -23,6 +24,7 @@ export type RepeatRule = {
   customDays: number; // 「○日ごと」の日数
   doneTimes: number[]; // 完了にした回の日時 (ミリ秒)
   skippedTimes: number[]; // 削除した回の日時 (ミリ秒)
+  eventMinutes?: number; // 予定のときだけ、何分間か (始まる時刻は start の時刻)
 };
 
 // 「毎週」「3日ごと」のような間隔の説明
@@ -97,14 +99,21 @@ export const getOccurrences = (
     if (date.isBefore(from) || rule.skippedTimes.includes(time)) {
       continue;
     }
-    occurrences.push({
+    const base = {
       id: getOccurrenceId(rule.id, time),
       name: rule.name,
       isDone: rule.doneTimes.includes(time),
       priority: rule.priority,
-      deadline: date.toDate(),
       repeatId: rule.id,
-    });
+    };
+    occurrences.push(
+      rule.eventMinutes === undefined
+        ? { ...base, deadline: date.toDate() }
+        : createEventTodo(base, {
+            start: date.toDate(),
+            end: date.add(rule.eventMinutes, "minute").toDate(),
+          }),
+    );
   }
   return occurrences;
 };

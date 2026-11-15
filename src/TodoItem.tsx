@@ -9,6 +9,11 @@ import { priorityLabels, priorityStars } from "./priority";
 import PixelIcon from "./PixelIcon";
 import { heartIcon, calendarIcon, trashIcon, checkIcon } from "./pixelIcons";
 import CommandButton from "./CommandButton";
+import {
+  canCheck,
+  formatEventTime,
+  getCheckLockMessage,
+} from "./scheduleEvent";
 
 type Props = {
   todo: Todo;
@@ -68,8 +73,10 @@ const TodoItem = (props: Props) => {
             <input
               type="checkbox"
               checked={todo.isDone}
+              // 予定は、終わってからその日のうちだけチェックできる
+              disabled={!canCheck(todo, props.now)}
               onChange={(e) => props.updateIsDone(todo.id, e.target.checked)}
-              className="mr-3 size-4 shrink-0 cursor-pointer accent-ut-yellow"
+              className="mr-3 size-4 shrink-0 cursor-pointer accent-ut-yellow disabled:cursor-not-allowed disabled:opacity-40"
             />
             <PixelIcon
               pixels={heartIcon}
@@ -99,12 +106,19 @@ const TodoItem = (props: Props) => {
               className={twMerge("flex items-center text-sm", deadlineColor)}
             >
               <FontAwesomeIcon icon={faClock} className="mr-1" />
-              {formatDeadline(todo.deadline)}
+              {todo.event !== undefined
+                ? formatEventTime(todo.event, "YYYY/MM/DD")
+                : formatDeadline(todo.deadline)}
               {isOverdue && (
                 <span className="ml-1 inline-block motion-safe:animate-shake">
                   (期限切れ)
                 </span>
               )}
+            </span>
+          )}
+          {todo.event !== undefined && (
+            <span className="border border-ut-orange bg-ut-orange px-2 text-xs text-black">
+              予定
             </span>
           )}
           {todo.repeatId && (
@@ -114,6 +128,11 @@ const TodoItem = (props: Props) => {
           )}
           {todo.isDone && (
             <span className="border border-white px-2 text-xs">完了済み</span>
+          )}
+          {getCheckLockMessage(todo, props.now) !== null && !isOverdue && (
+            <span className="w-full text-xs text-gray-500">
+              ＊ {getCheckLockMessage(todo, props.now)}
+            </span>
           )}
         </div>
         <div className="flex shrink-0 gap-2">

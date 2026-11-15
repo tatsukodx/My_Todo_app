@@ -61,6 +61,16 @@ import type { Point } from "./ScreenTransition";
 import DeadlineInput from "./DeadlineInput";
 import { formatDeadline } from "./deadline";
 import { priorityLabels } from "./priority";
+import EventTimeInput from "./EventTimeInput";
+import {
+  canCheck,
+  createDefaultEvent,
+  createEventTodo,
+  formatEventTime,
+  getSortTime,
+  isEventTimeValid,
+} from "./scheduleEvent";
+import type { TodoEvent } from "./types";
 
 const localStorageKey = "MyTodoApp";
 const repeatStorageKey = "MyTodoAppRepeats"; // 繰り返しの設定の保存先
@@ -77,6 +87,7 @@ type StoredTodo = {
   priority: number;
   deadline: string | null;
   repeatId?: string;
+  event?: { start: string; end: string };
 };
 
 const loadTodos = (): Todo[] => {
@@ -89,6 +100,10 @@ const loadTodos = (): Todo[] => {
   return storedTodos.map((todo) => ({
     ...todo,
     deadline: todo.deadline === null ? null : new Date(todo.deadline),
+    event:
+      todo.event === undefined
+        ? undefined
+        : { start: new Date(todo.event.start), end: new Date(todo.event.end) },
   }));
 };
 
@@ -130,10 +145,9 @@ const getTodayRepeatTodos = (repeats: RepeatRule[]): Todo[] => {
   );
 };
 
+// 期限の早い順 (予定は始まる時刻の順) に並べる
 const sortByDeadline = (todos: Todo[]): Todo[] =>
-  [...todos].sort(
-    (a, b) => dayjs(a.deadline).valueOf() - dayjs(b.deadline).valueOf(),
-  );
+  [...todos].sort((a, b) => getSortTime(a) - getSortTime(b));
 
 const getTodoNameError = (name: string): string => {
   const trimmedName = name.trim();
@@ -152,6 +166,9 @@ const App = () => {
   const [isNameTouched, setIsNameTouched] = useState(false);
   const [newTodoRepeat, setNewTodoRepeat] = useState<RepeatType>("none");
   const [newTodoRepeatDays, setNewTodoRepeatDays] = useState(3); // 「○日ごと」の日数
+  // タスクか予定 (習い事など、何時から何時までと決まっているもの) か
+  const [newTodoKind, setNewTodoKind] = useState<"task" | "event">("task");
+  const [newEvent, setNewEvent] = useState<TodoEvent>(createDefaultEvent);
   // 追加・完了などの操作で始まった場面 (null のときは Todo の状態で決める)
   const [eventScene, setEventScene] = useState<SceneKey | null>(null);
   // 同じ場面が続けて起きても、会話を 1 セリフ目から始め直すための番号
@@ -201,12 +218,20 @@ const App = () => {
   const isNewTodoNameInvalid = newTodoNameError !== "";
   const showNewTodoNameError = isNameTouched && isNewTodoNameInvalid;
   // 繰り返しは開始日時を基準にするので、開始日時がないと作れない
-  const isRepeatInvalid = newTodoRepeat !== "none" && newTodoDeadline === null;
+  const isRepeatInvalid =
+    newTodoKind === "task" &&
+    newTodoRepeat !== "none" &&
+    newTodoDeadline === null;
+  // 予定は、終わりの時刻が始まりより後でないと作れない
+  const isEventInvalid = newTodoKind === "event" && !isEventTimeValid(newEvent);
+  // 繰り返しの基準の日時 (予定なら始まる日時、タスクなら期限)
+  const repeatStart =
+    newTodoKind === "event" ? newEvent.start : newTodoDeadline;
   // 追加フォームで見せる、最初の 3 回分の日時
   const previewDates =
-    newTodoRepeat === "none" || newTodoDeadline === null
+    newTodoRepeat === "none" || repeatStart === null
       ? []
-      : getFirstDates(newTodoDeadline, newTodoRepeat, newTodoRepeatDays, 3);
+      : getFirstDates(repeatStart, newTodoRepeat, newTodoRepeatDays, 3);
 
   useEffect(() => {
     localStorage.setItem(localStorageKey, JSON.stringify(todos));
@@ -238,9 +263,12 @@ const App = () => {
   useEffect(() => {
     const current = Date.now();
     const upcoming = [...todos, ...getTodayRepeatTodos(repeats)]
-      .filter((todo) => !todo.isDone && todo.deadline !== null)
-      .map((todo) => todo.deadline!.getTime())
-      .filter((time) => time >= current);
+      .filter((todo) => !todo.isDone)
+      .flatMap((todo) => [
+        todo.deadline?.getTime(),
+        todo.event?.end.getTime(), // 予定は、終わってチェックできるようになる時刻にも
+      ])
+      .filter((time): time is number => time !== undefined && time >= current);
     if (upcoming.length === 0) {
       return;
     }
@@ -372,11 +400,38 @@ const App = () => {
       setIsNameTouched(true);
       return;
     }
-    if (isRepeatInvalid) {
+    if (isRepeatInvalid || isEventInvalid) {
       return;
     }
 
-    if (newTodoRepeat !== "none" && newTodoDeadline !== null) {
+    if (newTodoKind === "event") {
+      if (newTodoRepeat !== "none") {
+        // 繰り返す予定は、1 回目の始まる日時と、何分間かを保存する
+        const newRule: RepeatRule = {
+          id: uuid(),
+          name: newTodoName.trim(),
+          priority: newTodoPriority,
+          start: newEvent.start,
+          type: newTodoRepeat,
+          customDays: newTodoRepeatDays,
+          doneTimes: [],
+          skippedTimes: [],
+          eventMinutes: dayjs(newEvent.end).diff(newEvent.start, "minute"),
+        };
+        setRepeats((currentRepeats) => [...currentRepeats, newRule]);
+      } else {
+        const newTodo = createEventTodo(
+          {
+            id: uuid(),
+            name: newTodoName.trim(),
+            isDone: false,
+            priority: newTodoPriority,
+          },
+          newEvent,
+        );
+        setTodos((currentTodos) => [...currentTodos, newTodo]);
+      }
+    } else if (newTodoRepeat !== "none" && newTodoDeadline !== null) {
       // 繰り返しのときは、開始日時と間隔だけを保存する (各回はその都度計算する)
       const newRule: RepeatRule = {
         id: uuid(),
@@ -403,12 +458,20 @@ const App = () => {
     setNewTodoPriority(1);
     setNewTodoDeadline(null);
     setNewTodoRepeat("none");
+    setNewTodoKind("task");
+    setNewEvent(createDefaultEvent());
     setIsNameTouched(false);
     setIsAddFormOpen(false);
     playScene("added");
   };
 
   const updateIsDone = (id: string, value: boolean) => {
+    const target = [...listedTodos, ...monthRepeatTodos].find(
+      (t) => t.id === id,
+    );
+    if (value && target !== undefined && !canCheck(target, Date.now())) {
+      return;
+    }
     if (value) {
       const restCount = listedTodos.filter(
         (todo) => !todo.isDone && todo.id !== id,
@@ -604,6 +667,7 @@ const App = () => {
               date={selectedDate}
               todos={scheduleTodos}
               updateIsDone={updateIsDone}
+              now={now}
             />
           ) : (
             <Calendar
@@ -677,8 +741,24 @@ const App = () => {
                   <span className="ml-2 text-ut-orange">
                     {getRepeatLabel(rule.type, rule.customDays)}
                   </span>
+                  {rule.eventMinutes !== undefined && (
+                    <span className="ml-2 bg-ut-orange px-1 text-xs text-black">
+                      予定
+                    </span>
+                  )}
                   <span className="ml-2 text-gray-400">
-                    {formatDeadline(rule.start)} から
+                    {rule.eventMinutes === undefined
+                      ? formatDeadline(rule.start)
+                      : formatEventTime(
+                          {
+                            start: rule.start,
+                            end: dayjs(rule.start)
+                              .add(rule.eventMinutes, "minute")
+                              .toDate(),
+                          },
+                          "YYYY/MM/DD",
+                        )}{" "}
+                    から
                   </span>
                 </span>
                 <CommandButton
@@ -744,7 +824,8 @@ const App = () => {
           >
             <div className="flex items-center justify-between">
               <h2 id="newTodoHeading" className="text-lg">
-                <Star /> 新しいタスクの追加
+                <Star /> 新しい{newTodoKind === "event" ? "予定" : "タスク"}
+                の追加
               </h2>
               <button
                 type="button"
@@ -755,6 +836,39 @@ const App = () => {
                 ×
               </button>
             </div>
+
+            <fieldset>
+              <legend className="sr-only">種類</legend>
+              <div className="flex gap-2">
+                {(
+                  [
+                    ["task", "タスク", "期限までにやること"],
+                    ["event", "予定", "習い事など、時間が決まっていること"],
+                  ] as const
+                ).map(([kind, label, note]) => (
+                  <label
+                    key={kind}
+                    className={twMerge(
+                      "flex grow cursor-pointer flex-col border-2 border-gray-600 px-3 py-1 text-gray-400",
+                      newTodoKind === kind && "border-ut-yellow text-ut-yellow",
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="todoKind"
+                        value={kind}
+                        checked={newTodoKind === kind}
+                        onChange={() => setNewTodoKind(kind)}
+                        className="accent-ut-yellow"
+                      />
+                      {label}
+                    </span>
+                    <span className="text-xs">{note}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
             <div>
               <div className="flex items-center space-x-2">
@@ -817,25 +931,37 @@ const App = () => {
               </div>
             </fieldset>
 
-            <div className="space-y-1">
-              <div className="text-ut-yellow">
-                {newTodoRepeat === "none" ? "期限" : "開始"}
-              </div>
-              <DeadlineInput
-                id="deadline"
-                label={newTodoRepeat === "none" ? "期限" : "開始"}
-                decideLabel={
-                  newTodoRepeat === "none" ? "期限を決める" : "開始日を決める"
-                }
-                value={newTodoDeadline}
-                onChange={setNewTodoDeadline}
-              />
-              {newTodoRepeat === "none" && newTodoDeadline === null && (
-                <div className="text-sm text-gray-400">
-                  期限を決めなければ「とりあえず後でやる」に入ります
+            {newTodoKind === "event" ? (
+              <div className="space-y-1">
+                <div className="text-ut-yellow">
+                  {newTodoRepeat === "none" ? "日時" : "1回目の日時"}
                 </div>
-              )}
-            </div>
+                <EventTimeInput value={newEvent} onChange={setNewEvent} />
+                <div className="text-sm text-gray-400">
+                  終わったあと、その日のうちにチェックすると報酬がもらえます
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="text-ut-yellow">
+                  {newTodoRepeat === "none" ? "期限" : "開始"}
+                </div>
+                <DeadlineInput
+                  id="deadline"
+                  label={newTodoRepeat === "none" ? "期限" : "開始"}
+                  decideLabel={
+                    newTodoRepeat === "none" ? "期限を決める" : "開始日を決める"
+                  }
+                  value={newTodoDeadline}
+                  onChange={setNewTodoDeadline}
+                />
+                {newTodoRepeat === "none" && newTodoDeadline === null && (
+                  <div className="text-sm text-gray-400">
+                    期限を決めなければ「とりあえず後でやる」に入ります
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -896,7 +1022,9 @@ const App = () => {
             <CommandButton
               icon={plusIcon}
               type="submit"
-              disabled={isNewTodoNameInvalid || isRepeatInvalid}
+              disabled={
+                isNewTodoNameInvalid || isRepeatInvalid || isEventInvalid
+              }
             >
               追加
             </CommandButton>

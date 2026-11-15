@@ -3,6 +3,7 @@ import type { TouchEvent } from "react";
 import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
 import type { Todo } from "./types";
+import { getSortTime } from "./scheduleEvent";
 
 type Props = {
   date: Date; // 選んでいる日 (この日の月を表示する)
@@ -169,10 +170,7 @@ const Calendar = (props: Props) => {
           }
           const dayTodos = props.todos
             .filter((todo) => dayjs(todo.deadline).isSame(day, "day"))
-            .sort(
-              (a, b) =>
-                dayjs(a.deadline).valueOf() - dayjs(b.deadline).valueOf(),
-            );
+            .sort((a, b) => getSortTime(a) - getSortTime(b));
           const hiddenCount = dayTodos.length - maxVisibleTodos;
           return (
             <button
