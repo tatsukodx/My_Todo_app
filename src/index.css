@@ -2,10 +2,10 @@
 
 /* サンズのセリフ用フォント
    英数字は Comic Neue、日本語は HGS創英角ﾎﾟｯﾌﾟ体 (Office 付属で配布できないため、
-   閲覧者の PC に入っていれば使う)。入っていなければ Yusei Magic で代用する */
+   閲覧者の PC に入っていれば使う)。入っていなければ Mochiy Pop One で代用する */
 @theme {
   --font-sans-voice:
-    "Comic Neue", "HGS創英角ﾎﾟｯﾌﾟ体", "HGP創英角ﾎﾟｯﾌﾟ体", "Yusei Magic",
+    "Comic Neue", "HGS創英角ﾎﾟｯﾌﾟ体", "HGP創英角ﾎﾟｯﾌﾟ体", "Mochiy Pop One",
     "Comic Sans MS", cursive;
   --font-pixel: "DotGothic16", sans-serif;
   /* ガスターの Wingdings 風の記号用。白黒の記号を持つフォントを優先する */

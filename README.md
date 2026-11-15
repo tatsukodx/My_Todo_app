@@ -133,9 +133,9 @@ UNDERTALE（RPG）に出てくるサンズとガスター博士が、Todo の進
 - localStorage（タスク・プレイヤー・作業報告書・音の設定の保存）
 - Web Audio API（BGM のピッチ変更とフェード、効果音の逆再生）
 - GitHub Actions / GitHub Pages（公開）
-- フォント：DotGothic16、Comic Neue、Yusei Magic（いずれも Google Fonts、SIL Open Font License）
+- フォント：DotGothic16、Comic Neue、Mochiy Pop One（いずれも Google Fonts、SIL Open Font License）
 
-サンズのセリフの日本語部分は、閲覧している PC に HGS創英角ﾎﾟｯﾌﾟ体（Microsoft Office に付属）が入っていれば、それで表示する。入っていない環境では Yusei Magic で表示する。
+サンズのセリフの日本語部分は、閲覧している PC に HGS創英角ﾎﾟｯﾌﾟ体（Microsoft Office に付属）が入っていれば、それで表示する。入っていない環境（スマホなど）では、雰囲気の近いポップ体の Mochiy Pop One で表示する。
 
 ## このアプリについて
 
