@@ -12,6 +12,8 @@ type Props = {
   playerName: string;
   itemName: string;
   endSound?: SoundName; // 最後のセリフを表示し終えたときに鳴らす音 (ギャグのオチなど)
+  isPaused?: boolean; // true の間は話し始めない (画面の切り替えの演出中など)
+  startDelay?: number; // 話し始めるまで待つ時間 (ミリ秒)
 };
 
 const typingInterval = 50; // 1 文字を表示する間隔 (ミリ秒)
@@ -45,7 +47,10 @@ const ShopScene = (props: Props) => {
       .replaceAll("{item}", props.itemName),
   );
   const isTyping = charCount < chars.length;
-  const isGasterTalking = isTyping && line.speaker === "gaster";
+  // 最初の 1 文字を出すまでは、まだ話し始めていない
+  const hasStarted = index > 0 || charCount > 0;
+  const isGasterTalking =
+    !props.isPaused && hasStarted && isTyping && line.speaker === "gaster";
 
   const goNext = () => {
     if (!isLast) {
@@ -56,16 +61,19 @@ const ShopScene = (props: Props) => {
 
   // 1 文字ずつ表示し、表示し終えたら少し待って次のセリフへ (最後のセリフはそのまま残す)
   useEffect(() => {
-    if (!isTyping && isLast) {
+    if (props.isPaused || (!isTyping && isLast)) {
       return;
     }
     const timer = isTyping
-      ? window.setTimeout(() => {
-          if (line.speaker === "sans") {
-            playSansVoiceFor(chars[charCount]);
-          }
-          setCharCount((n) => n + 1);
-        }, typingInterval)
+      ? window.setTimeout(
+          () => {
+            if (line.speaker === "sans") {
+              playSansVoiceFor(chars[charCount]);
+            }
+            setCharCount((n) => n + 1);
+          },
+          hasStarted ? typingInterval : (props.startDelay ?? typingInterval),
+        )
       : window.setTimeout(goNext, nextLineDelay);
     return () => window.clearTimeout(timer);
   });

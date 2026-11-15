@@ -56,6 +56,8 @@ import GameOver from "./GameOver";
 import type { LogEntry } from "./taskLog";
 import { createLogEntry, recordDone, cancelLatestDone } from "./taskLog";
 import WorkReport from "./WorkReport";
+import ScreenTransition from "./ScreenTransition";
+import type { Point } from "./ScreenTransition";
 import DeadlineInput from "./DeadlineInput";
 import { formatDeadline } from "./deadline";
 import { priorityLabels } from "./priority";
@@ -164,6 +166,12 @@ const App = () => {
   const [player, setPlayer] = useState<Player>(loadPlayer);
   const [now, setNow] = useState(() => Date.now()); // バフの残り時間などに使う今の日時
   const [isShopOpen, setIsShopOpen] = useState(false);
+  // ショップとメイン画面を行き来するときの演出 (null なら演出中ではない)
+  const [shopTransition, setShopTransition] = useState<{
+    id: number;
+    origin: Point;
+    open: boolean;
+  } | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
   const [taskLog, setTaskLog] = useState<LogEntry[]>(loadLog);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -273,6 +281,20 @@ const App = () => {
     const timer = window.setTimeout(() => setToast(null), toastDuration);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  // ショップを開け閉めする。押したボタンに向かって画面が閉じる演出をはさむ
+  const changeShopOpen = (open: boolean) => {
+    const button = document.activeElement;
+    const rect =
+      button instanceof HTMLElement && button !== document.body
+        ? button.getBoundingClientRect()
+        : null;
+    const origin =
+      rect === null || rect.width === 0
+        ? { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+        : { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    setShopTransition({ id: Date.now(), origin, open });
+  };
 
   const showToast = (text: string) => {
     setToast({ text, id: Date.now() });
@@ -521,7 +543,7 @@ const App = () => {
           player={player}
           now={now}
           onRename={() => setIsRenaming(true)}
-          onOpenShop={() => setIsShopOpen(true)}
+          onOpenShop={() => changeShopOpen(true)}
         />
         <DateSelector date={selectedDate} onChange={setSelectedDate} />
         <div className="flex gap-2">
@@ -864,7 +886,16 @@ const App = () => {
           onBuy={buy}
           onUse={use}
           now={now}
-          onClose={() => setIsShopOpen(false)}
+          onClose={() => changeShopOpen(false)}
+          isPaused={shopTransition !== null}
+        />
+      )}
+      {shopTransition !== null && (
+        <ScreenTransition
+          key={shopTransition.id}
+          origin={shopTransition.origin}
+          onCovered={() => setIsShopOpen(shopTransition.open)}
+          onDone={() => setShopTransition(null)}
         />
       )}
 

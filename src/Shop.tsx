@@ -16,6 +16,7 @@ type Props = {
   onUse: (item: Item) => UseResult;
   now: number;
   onClose: () => void;
+  isPaused?: boolean; // 画面の切り替えの演出中は、二人がまだ話し始めないようにする
 };
 
 const itemsPerPage = 4; // 1 ページに並べるアイテムの数 (スクロールしなくても会話が見えるように)
@@ -144,6 +145,9 @@ const Shop = (props: Props) => {
           playerName={props.player.name}
           itemName={talk.itemName}
           endSound={talk.endSound}
+          isPaused={props.isPaused}
+          // 店に入ったときは、画面が開いてから一息おいて話し始める
+          startDelay={talk.count === 0 ? 500 : undefined}
         />
 
         <div className="flex flex-wrap items-center gap-2">
